@@ -377,29 +377,43 @@
   <!-- Token form -->
   <div class="token-form" id="token-form">
     <h2>Connexion Strava</h2>
-    <p>Entrez vos identifiants Strava pour charger vos sorties vélo 2025.</p>
+    <p>Pour afficher vos sorties, vous avez besoin d'un <strong style="color:var(--text)">Access Token</strong> Strava. Suivez les 2 étapes ci-dessous :</p>
 
-    <div class="form-group">
-      <label class="form-label">Client ID</label>
-      <input class="form-input" id="client_id" type="text" value="43268" placeholder="Ex: 43268">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Client Secret</label>
-      <input class="form-input" id="client_secret" type="text" value="16c230638da8ab77494cf8ee8c3597b07e8057a0" placeholder="…">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Code d'autorisation</label>
-      <input class="form-input" id="auth_code" type="text" value="4b303c5dccd8f4ede3d2405cfc3c1e9f6c19a75f" placeholder="Depuis l'URL de redirection">
+    <!-- Step 1 -->
+    <div style="background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px">
+      <div style="font-size:0.75rem;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">① Autoriser l'accès</div>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px">Cliquez pour autoriser la connexion à votre compte Strava :</p>
+      <a href="https://www.strava.com/oauth/authorize?client_id=43268&response_type=code&redirect_uri=http://localhost&scope=activity:read_all" target="_blank"
+        style="display:inline-block;background:var(--orange);color:#fff;text-decoration:none;padding:10px 20px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px">
+        AUTORISER SUR STRAVA →
+      </a>
+      <p style="font-size:0.8rem;color:var(--muted);margin-top:12px">
+        Après autorisation, copiez le <code style="color:var(--text);background:#222;padding:2px 6px;border-radius:4px">code=XXXXX</code> depuis l'URL de la page d'erreur localhost.
+      </p>
     </div>
 
-    <button class="btn-primary" onclick="authenticate()">CHARGER MES SORTIES →</button>
-    <p style="margin-top:16px; font-size:0.75rem; color:var(--muted); text-align:center;">
-      Ou entrez directement votre <strong style="color:var(--text)">Access Token</strong> ci-dessous :
+    <!-- Step 2 -->
+    <div style="background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px">
+      <div style="font-size:0.75rem;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">② Obtenir le token (curl)</div>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Dans votre terminal, remplacez <code style="color:var(--orange)">VOTRE_CODE</code> :</p>
+      <div id="curl-box" style="background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:14px;font-family:monospace;font-size:0.78rem;color:#aaa;position:relative;overflow-x:auto;white-space:pre-wrap;word-break:break-all">curl -X POST https://www.strava.com/oauth/token \
+  -d client_id=43268 \
+  -d client_secret=16c230638da8ab77494cf8ee8c3597b07e8057a0 \
+  -d code=<span style="color:var(--orange)">VOTRE_CODE</span> \
+  -d grant_type=authorization_code</div>
+      <p style="font-size:0.8rem;color:var(--muted);margin-top:10px">La réponse JSON contient <code style="color:var(--text);background:#222;padding:2px 6px;border-radius:4px">"access_token":"..."</code> — copiez cette valeur.</p>
+    </div>
+
+    <!-- Token input -->
+    <div class="form-group">
+      <label class="form-label">③ Collez votre Access Token ici</label>
+      <input class="form-input" id="access_token_direct" type="text" placeholder="ex: a1b2c3d4e5f6...">
+    </div>
+    <button class="btn-primary" onclick="loadWithToken()">CHARGER MES SORTIES →</button>
+
+    <p style="margin-top:16px;font-size:0.75rem;color:var(--muted);text-align:center">
+      🔒 Votre token n'est jamais envoyé ailleurs que vers l'API Strava officielle.
     </p>
-    <div class="form-group" style="margin-top:8px">
-      <input class="form-input" id="access_token_direct" type="text" placeholder="Access token direct (optionnel)">
-    </div>
-    <button class="btn-primary" style="background:#333; margin-top:0" onclick="loadWithToken()">UTILISER CE TOKEN →</button>
   </div>
 </div>
 
@@ -604,14 +618,7 @@
       </div>`;
   }
 
-  // Auto-load if all fields are prefilled
-  window.addEventListener('load', () => {
-    const code = document.getElementById('auth_code').value.trim();
-    if (code) {
-      // Small delay to let user see the form
-      setTimeout(() => authenticate(), 800);
-    }
-  });
+  
 </script>
 </body>
 </html>
