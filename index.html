@@ -635,7 +635,113 @@
     display: none;
   }
 
-  /* ── YEAR SELECTOR ── */
+  /* ── CYCLING MODE TOGGLE ── */
+  .cy-mode-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.25rem;
+    gap: 0.2rem;
+    flex-shrink: 0;
+  }
+
+  .cy-mode-btn {
+    padding: 0.45rem 1.1rem;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    color: var(--muted);
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .cy-mode-btn:hover { color: var(--text); }
+  .cy-mode-btn.active { background: var(--orange); color: white; }
+
+  /* ── SELECTOR PANEL ── */
+  .cy-selector-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .year-picker-group, .month-picker-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .picker-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .year-chips, .month-chips {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+
+  .year-chip {
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .month-chip {
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  .year-chip:hover, .month-chip:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  .year-chip.active-a, .month-chip.active-a { background: rgba(252,76,2,0.18); border-color: var(--orange); color: var(--orange); }
+  .year-chip.active-b, .month-chip.active-b { background: rgba(96,165,250,0.18); border-color: var(--blue); color: var(--blue); }
+
+  .vs-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    padding-top: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  /* ── YEAR SELECTOR (legacy kept for compat) ── */
   .year-selector-bar {
     display: flex;
     align-items: flex-start;
@@ -652,13 +758,6 @@
     flex-wrap: wrap;
   }
 
-  .year-picker-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
   .year-picker-label {
     font-size: 0.65rem;
     text-transform: uppercase;
@@ -666,30 +765,6 @@
     color: var(--muted);
     font-weight: 600;
   }
-
-  .year-chips {
-    display: flex;
-    gap: 0.3rem;
-    flex-wrap: wrap;
-  }
-
-  .year-chip {
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1.5px solid var(--border);
-    background: var(--surface2);
-    color: var(--muted);
-    transition: all 0.18s;
-    font-family: 'DM Sans', sans-serif;
-    letter-spacing: 0.5px;
-  }
-
-  .year-chip:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
-  .year-chip.active-a { background: rgba(252,76,2,0.15); border-color: var(--orange); color: var(--orange); }
-  .year-chip.active-b { background: rgba(96,165,250,0.15); border-color: var(--blue); color: var(--blue); }
 
   .year-vs-sep {
     font-family: 'Bebas Neue', sans-serif;
@@ -994,7 +1069,7 @@
 
   <nav class="dash-nav">
     <button class="nav-tab active" onclick="switchTab('overview',this)">📊 Vue générale</button>
-    <button class="nav-tab" onclick="switchTab('cycling',this)">🚴 Vélo 2025 vs 2026</button>
+    <button class="nav-tab" onclick="switchTab('cycling',this)">🚴 Comparaison Sorties Par Année</button>
   </nav>
 
   <!-- TAB: OVERVIEW -->
@@ -1098,78 +1173,49 @@
   <div id="tab-cycling" class="tab-page">
   <main class="dash-main">
 
-    <!-- Year selector bar -->
-    <div class="year-selector-bar">
+    <!-- Top bar: title + mode toggle -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem">
       <div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px">VÉLO — COMPARAISON ANNUELLE</div>
-        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">Toutes les sorties vélo · semaine par semaine</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px" id="cy-main-title">VÉLO — COMPARAISON</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem" id="cy-main-sub">Toutes les sorties vélo · semaine par semaine</div>
       </div>
-      <div class="year-pickers">
-        <div class="year-picker-group">
-          <div class="year-picker-label" id="cy-label-a">Année A</div>
-          <div class="year-chips" id="year-chips-a"></div>
-        </div>
-        <div class="year-vs-sep">VS</div>
-        <div class="year-picker-group">
-          <div class="year-picker-label" id="cy-label-b">Année B</div>
-          <div class="year-chips" id="year-chips-b"></div>
-        </div>
+      <div class="cy-mode-toggle">
+        <button class="cy-mode-btn active" onclick="setCyMode('year',this)">📅 Par semaine</button>
+        <button class="cy-mode-btn" onclick="setCyMode('monthly',this)">📆 Mois/mois</button>
+      </div>
+    </div>
+
+    <!-- YEAR MODE selectors -->
+    <div id="cy-year-panel" class="cy-selector-panel">
+      <div class="year-picker-group">
+        <div class="picker-label" id="cy-label-a">Année A</div>
+        <div class="year-chips" id="year-chips-a"></div>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="year-picker-group">
+        <div class="picker-label" id="cy-label-b">Année B</div>
+        <div class="year-chips" id="year-chips-b"></div>
       </div>
     </div>
 
     <!-- Hero stats -->
-    <div class="cycling-hero" id="cycling-hero" style="margin-bottom:1.5rem">
-      <div class="cycling-stat">
-        <div class="cs-label">🚴 Sorties</div>
-        <div class="cs-vals">
-          <span class="cs-2026" id="cy-rides-a">—</span>
-          <span class="cs-vs">vs</span>
-          <span class="cs-2025" id="cy-rides-b">—</span>
-          <span class="cs-delta neu" id="cy-rides-delta">—</span>
-        </div>
-      </div>
-      <div class="cycling-stat">
-        <div class="cs-label">📏 Distance (km)</div>
-        <div class="cs-vals">
-          <span class="cs-2026" id="cy-dist-a">—</span>
-          <span class="cs-vs">vs</span>
-          <span class="cs-2025" id="cy-dist-b">—</span>
-          <span class="cs-delta neu" id="cy-dist-delta">—</span>
-        </div>
-      </div>
-      <div class="cycling-stat">
-        <div class="cs-label">⏱️ Temps</div>
-        <div class="cs-vals">
-          <span class="cs-2026" id="cy-time-a">—</span>
-          <span class="cs-vs">vs</span>
-          <span class="cs-2025" id="cy-time-b">—</span>
-          <span class="cs-delta neu" id="cy-time-delta">—</span>
-        </div>
-      </div>
-      <div class="cycling-stat">
-        <div class="cs-label">⛰️ Dénivelé (m)</div>
-        <div class="cs-vals">
-          <span class="cs-2026" id="cy-elev-a">—</span>
-          <span class="cs-vs">vs</span>
-          <span class="cs-2025" id="cy-elev-b">—</span>
-          <span class="cs-delta neu" id="cy-elev-delta">—</span>
-        </div>
-      </div>
-      <div class="cycling-stat">
-        <div class="cs-label">⚡ Vitesse moy. (km/h)</div>
-        <div class="cs-vals">
-          <span class="cs-2026" id="cy-speed-a">—</span>
-          <span class="cs-vs">vs</span>
-          <span class="cs-2025" id="cy-speed-b">—</span>
-          <span class="cs-delta neu" id="cy-speed-delta">—</span>
-        </div>
-      </div>
+    <div class="cycling-hero" style="margin-bottom:1.5rem">
+      <div class="cycling-stat"><div class="cs-label">🚴 Sorties</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-rides-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-rides-b">—</span><span class="cs-delta neu" id="cy-rides-delta">—</span></div></div>
+      <div class="cycling-stat"><div class="cs-label">📏 Distance (km)</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-dist-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-dist-b">—</span><span class="cs-delta neu" id="cy-dist-delta">—</span></div></div>
+      <div class="cycling-stat"><div class="cs-label">⏱️ Temps</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-time-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-time-b">—</span><span class="cs-delta neu" id="cy-time-delta">—</span></div></div>
+      <div class="cycling-stat"><div class="cs-label">⛰️ Dénivelé (m)</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-elev-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-elev-b">—</span><span class="cs-delta neu" id="cy-elev-delta">—</span></div></div>
+      <div class="cycling-stat"><div class="cs-label">⚡ Vitesse moy. (km/h)</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-speed-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-speed-b">—</span><span class="cs-delta neu" id="cy-speed-delta">—</span></div></div>
     </div>
 
-    <!-- Comparison chart -->
+    <!-- Chart -->
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-head">
-        <span class="card-title">SEMAINE PAR SEMAINE</span>
+        <span class="card-title" id="cy-chart-title">SEMAINE PAR SEMAINE</span>
         <div class="metric-tabs">
           <button class="metric-tab active" onclick="setCyclingMetric('distance',this)">Distance</button>
           <button class="metric-tab" onclick="setCyclingMetric('time',this)">Temps</button>
@@ -1178,50 +1224,44 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="compare-chart-wrap">
-          <canvas id="cyclingCompareChart"></canvas>
-        </div>
+        <div class="compare-chart-wrap"><canvas id="cyclingCompareChart"></canvas></div>
       </div>
     </div>
 
-    <!-- Week-by-week table -->
+    <!-- Detail table -->
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-head">
-        <span class="card-title">TABLEAU DÉTAILLÉ PAR SEMAINE</span>
+        <span class="card-title" id="cy-table-title">TABLEAU PAR SEMAINE</span>
         <span class="card-badge" id="cy-table-badge">—</span>
       </div>
       <div style="overflow-x:auto">
         <table class="rides-table">
-          <thead>
-            <tr>
-              <th>Sem.</th>
-              <th>Dates</th>
-              <th id="th-a-km" style="color:var(--orange)">A — km</th>
-              <th id="th-b-km" style="color:var(--blue)">B — km</th>
-              <th>Écart km</th>
-              <th id="th-a-rides" style="color:var(--orange)">A — sorties</th>
-              <th id="th-b-rides" style="color:var(--blue)">B — sorties</th>
-              <th>Visuel</th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th id="th-period">Sem.</th>
+            <th>Dates</th>
+            <th id="th-a-km" style="color:var(--orange)">A — km</th>
+            <th id="th-b-km" style="color:var(--blue)">B — km</th>
+            <th>Écart</th>
+            <th id="th-a-rides" style="color:var(--orange)">A — sorties</th>
+            <th id="th-b-rides" style="color:var(--blue)">B — sorties</th>
+            <th>Visuel</th>
+          </tr></thead>
           <tbody id="cycling-table-body"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Individual rides year A -->
+    <!-- Ride lists -->
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-head">
-        <span class="card-title" id="cy-list-a-title">SORTIES VÉLO — ANNÉE A</span>
+        <span class="card-title" id="cy-list-a-title">SORTIES — A</span>
         <span class="card-badge" id="cy-a-badge">—</span>
       </div>
       <div class="activity-list" id="cycling-a-list"></div>
     </div>
-
-    <!-- Individual rides year B -->
     <div class="card" style="margin-bottom:2rem">
       <div class="card-head">
-        <span class="card-title" id="cy-list-b-title">SORTIES VÉLO — ANNÉE B</span>
+        <span class="card-title" id="cy-list-b-title">SORTIES — B</span>
         <span class="card-badge" id="cy-b-badge">—</span>
       </div>
       <div class="activity-list" id="cycling-b-list"></div>
@@ -1242,7 +1282,9 @@ let cyclingChartInstance = null;
 let currentPeriodWeeks = 4;
 let currentCyclingMetric = 'distance';
 
-/* ─── Tab navigation ─── */
+/* ══════════════════════════════
+   TAB NAVIGATION
+══════════════════════════════ */
 function switchTab(tab, btn) {
   document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
@@ -1251,11 +1293,20 @@ function switchTab(tab, btn) {
   if (tab === 'cycling') initCyclingTab();
 }
 
-/* ─── Cycling state ─── */
-let selectedYearA = null;
-let selectedYearB = null;
+/* ══════════════════════════════
+   CYCLING STATE
+══════════════════════════════ */
+let cyMode = 'year';
+let selectedYearA = null, selectedYearB = null;
+let selectedMYearA = null, selectedMonthA = null;
+let selectedMYearB = null, selectedMonthB = null;
 
-/* ─── Cycling helpers ─── */
+const MONTHS_FR   = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+const MONTHS_LONG = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+/* ══════════════════════════════
+   HELPERS
+══════════════════════════════ */
 function isBikeActivity(a) {
   return ['Ride','VirtualRide','GravelRide','MountainBikeRide','EBikeRide'].includes(a.type);
 }
@@ -1284,218 +1335,308 @@ function buildWeeklyBikeData(acts, year) {
   rides.forEach(a => {
     const w = getISOWeek(a.start_date);
     if (!byWeek[w]) byWeek[w] = { distance:0, time:0, elevation:0, rides:0, speedSum:0, speedCount:0 };
-    byWeek[w].distance += (a.distance||0)/1000;
-    byWeek[w].time += (a.moving_time||0);
+    byWeek[w].distance  += (a.distance||0)/1000;
+    byWeek[w].time      += (a.moving_time||0);
     byWeek[w].elevation += (a.total_elevation_gain||0);
-    byWeek[w].rides += 1;
+    byWeek[w].rides     += 1;
     if (a.average_speed) { byWeek[w].speedSum += a.average_speed*3.6; byWeek[w].speedCount++; }
   });
   return byWeek;
 }
 
-function getAvailableYears() {
-  const years = new Set(
-    allActivities.filter(isBikeActivity).map(a => new Date(a.start_date).getFullYear())
-  );
-  return [...years].sort((a,b) => b - a);
+function buildWeeklyMonthData(acts, year, month) {
+  const rides = acts.filter(a => {
+    const d = new Date(a.start_date);
+    return isBikeActivity(a) && d.getFullYear()===year && d.getMonth()===month;
+  });
+  const byWeek = {};
+  rides.forEach(a => {
+    const wm = Math.ceil(new Date(a.start_date).getDate() / 7);
+    if (!byWeek[wm]) byWeek[wm] = {distance:0,time:0,elevation:0,rides:0,speedSum:0,speedCount:0};
+    byWeek[wm].distance  += (a.distance||0)/1000;
+    byWeek[wm].time      += (a.moving_time||0);
+    byWeek[wm].elevation += (a.total_elevation_gain||0);
+    byWeek[wm].rides     += 1;
+    if (a.average_speed) { byWeek[wm].speedSum+=a.average_speed*3.6; byWeek[wm].speedCount++; }
+  });
+  return byWeek;
 }
 
+function getAvailableYears() {
+  return [...new Set(allActivities.filter(isBikeActivity).map(a=>new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a);
+}
+
+function getAvailableMonths(year) {
+  return [...new Set(allActivities.filter(a=>isBikeActivity(a)&&new Date(a.start_date).getFullYear()===year).map(a=>new Date(a.start_date).getMonth()))].sort((a,b)=>a-b);
+}
+
+function extractMetric(d) {
+  if (currentCyclingMetric==='distance')  return parseFloat(d.distance.toFixed(1));
+  if (currentCyclingMetric==='time')      return parseFloat((d.time/3600).toFixed(2));
+  if (currentCyclingMetric==='elevation') return Math.round(d.elevation);
+  return d.rides;
+}
+
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
 function initCyclingTab() {
   const years = getAvailableYears();
   if (!years.length) return;
-
-  // Default: two most recent years
-  if (!selectedYearA || !years.includes(selectedYearA)) selectedYearA = years[0];
-  if (!selectedYearB || !years.includes(selectedYearB)) selectedYearB = years.length > 1 ? years[1] : years[0];
-
-  buildYearChips(years);
+  if (!selectedYearA  || !years.includes(selectedYearA))  selectedYearA  = years[0];
+  if (!selectedYearB  || !years.includes(selectedYearB))  selectedYearB  = years.length>1?years[1]:years[0];
+  if (!selectedMYearA || !years.includes(selectedMYearA)) selectedMYearA = years[0];
+  if (!selectedMYearB || !years.includes(selectedMYearB)) selectedMYearB = years.length>1?years[1]:years[0];
+  const mA = getAvailableMonths(selectedMYearA);
+  const mB = getAvailableMonths(selectedMYearB);
+  if (selectedMonthA===null && mA.length) selectedMonthA = mA[mA.length-1];
+  if (selectedMonthB===null && mB.length) selectedMonthB = mB[mB.length-1];
+  renderCyclingControls();
   renderCyclingTab();
+}
+
+/* ══════════════════════════════
+   MODE SWITCH
+══════════════════════════════ */
+function setCyMode(mode, btn) {
+  cyMode = mode;
+  document.querySelectorAll('.cy-mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCyclingControls();
+  renderCyclingTab();
+}
+
+function renderCyclingControls() {
+  const years = getAvailableYears();
+  buildYearChips(years);
+  document.getElementById('cy-main-sub').textContent =
+    cyMode==='year' ? 'Toutes les sorties vélo · semaine par semaine (année complète)'
+                    : 'Toutes les sorties vélo · mois par mois';
 }
 
 function buildYearChips(years) {
-  ['a','b'].forEach(side => {
-    const container = document.getElementById(`year-chips-${side}`);
-    container.innerHTML = years.map(y => `
-      <button class="year-chip ${y === (side==='a'?selectedYearA:selectedYearB) ? 'active-'+side : ''}"
-              onclick="selectYear('${side}', ${y}, this)">${y}</button>
-    `).join('');
+  ['a','b'].forEach(s => {
+    document.getElementById(`year-chips-${s}`).innerHTML = years.map(y =>
+      `<button class="year-chip ${y===(s==='a'?selectedYearA:selectedYearB)?'active-'+s:''}" onclick="selectYear('${s}',${y})">${y}</button>`
+    ).join('');
   });
-  updateLegendLabels();
-}
-
-function selectYear(side, year, btn) {
-  if (side === 'a') selectedYearA = year;
-  else selectedYearB = year;
-
-  // Refresh all chips
-  const years = getAvailableYears();
-  buildYearChips(years);
-  renderCyclingTab();
-}
-
-function updateLegendLabels() {
   document.getElementById('cy-label-a').textContent = `Année A · ${selectedYearA}`;
   document.getElementById('cy-label-b').textContent = `Année B · ${selectedYearB}`;
 }
 
-function renderCyclingTab() {
-  updateLegendLabels();
+function selectYear(side, year) {
+  if (side==='a') selectedYearA=year; else selectedYearB=year;
+  buildYearChips(getAvailableYears());
+  renderCyclingTab();
+}
 
-  const ridesA = allActivities.filter(a => isBikeActivity(a) && new Date(a.start_date).getFullYear() === selectedYearA);
-  const ridesB = allActivities.filter(a => isBikeActivity(a) && new Date(a.start_date).getFullYear() === selectedYearB);
+function buildMonthChips(years) {
+  ['a','b'].forEach(s => {
+    const selYear  = s==='a'?selectedMYearA:selectedMYearB;
+    const selMonth = s==='a'?selectedMonthA:selectedMonthB;
+    document.getElementById(`myear-chips-${s}`).innerHTML = years.map(y =>
+      `<button class="year-chip ${y===selYear?'active-'+s:''}" onclick="selectMYear('${s}',${y})">${y}</button>`
+    ).join('');
+    const avail = getAvailableMonths(selYear);
+    document.getElementById(`month-chips-${s}`).innerHTML = MONTHS_FR.map((m,i) => {
+      const has = avail.includes(i);
+      return `<button class="month-chip ${i===selMonth?'active-'+s:''}" style="${!has?'opacity:0.3;cursor:default':''}"
+                       onclick="${has?`selectMonth('${s}',${i})`:'void(0)'}">${m}</button>`;
+    }).join('');
+  });
+  document.getElementById('cy-mlabel-a').textContent = `Période A · ${MONTHS_LONG[selectedMonthA??0]} ${selectedMYearA}`;
+  document.getElementById('cy-mlabel-b').textContent = `Période B · ${MONTHS_LONG[selectedMonthB??0]} ${selectedMYearB}`;
+}
 
-  const sum = (arr, key) => arr.reduce((s,a) => s+(a[key]||0), 0);
-  const avgSpeed = arr => {
-    const ws = arr.filter(a => a.average_speed);
-    return ws.length ? ws.reduce((s,a) => s+a.average_speed*3.6, 0)/ws.length : 0;
+function selectMYear(side, year) {
+  if (side==='a') { selectedMYearA=year; const m=getAvailableMonths(year); if(m.length&&!m.includes(selectedMonthA)) selectedMonthA=m[0]; }
+  else            { selectedMYearB=year; const m=getAvailableMonths(year); if(m.length&&!m.includes(selectedMonthB)) selectedMonthB=m[0]; }
+  buildMonthChips(getAvailableYears());
+  renderCyclingTab();
+}
+
+function selectMonth(side, month) {
+  if (side==='a') selectedMonthA=month; else selectedMonthB=month;
+  buildMonthChips(getAvailableYears());
+  renderCyclingTab();
+}
+
+/* ══════════════════════════════
+   GET PERIOD RIDES
+══════════════════════════════ */
+function getPeriodRides() {
+  return {
+    ridesA: allActivities.filter(a=>isBikeActivity(a)&&new Date(a.start_date).getFullYear()===selectedYearA),
+    ridesB: allActivities.filter(a=>isBikeActivity(a)&&new Date(a.start_date).getFullYear()===selectedYearB),
+    labelA: String(selectedYearA), labelB: String(selectedYearB),
   };
+}
 
-  const dA = sum(ridesA,'distance')/1000, dB = sum(ridesB,'distance')/1000;
-  const tA = sum(ridesA,'moving_time'),    tB = sum(ridesB,'moving_time');
-  const eA = sum(ridesA,'total_elevation_gain'), eB = sum(ridesB,'total_elevation_gain');
-  const sA = avgSpeed(ridesA), sB = avgSpeed(ridesB);
+/* ══════════════════════════════
+   RENDER
+══════════════════════════════ */
+function renderCyclingTab() {
+  const {ridesA,ridesB,labelA,labelB} = getPeriodRides();
+  const sum=(arr,k)=>arr.reduce((s,a)=>s+(a[k]||0),0);
+  const avgSpd=arr=>{const w=arr.filter(a=>a.average_speed);return w.length?w.reduce((s,a)=>s+a.average_speed*3.6,0)/w.length:0;};
+  const dA=sum(ridesA,'distance')/1000, dB=sum(ridesB,'distance')/1000;
+  const tA=sum(ridesA,'moving_time'),   tB=sum(ridesB,'moving_time');
+  const eA=sum(ridesA,'total_elevation_gain'), eB=sum(ridesB,'total_elevation_gain');
+  const sA=avgSpd(ridesA), sB=avgSpd(ridesB);
 
-  function setVal(idA, idB, idDelta, vA, vB, fmt) {
-    document.getElementById(idA).textContent = fmt(vA);
-    document.getElementById(idB).textContent = fmt(vB);
-    const el = document.getElementById(idDelta);
-    if (!vB) { el.textContent='—'; el.className='cs-delta neu'; return; }
-    const pct = (vA-vB)/vB*100;
-    el.textContent = (pct>=0?'+':'') + pct.toFixed(0) + '%';
-    el.className = `cs-delta ${pct>0?'pos':pct<0?'neg':'neu'}`;
+  function setVal(ia,ib,id,vA,vB,fmt) {
+    document.getElementById(ia).textContent=fmt(vA);
+    document.getElementById(ib).textContent=fmt(vB);
+    const el=document.getElementById(id);
+    if(!vB){el.textContent='—';el.className='cs-delta neu';return;}
+    const pct=(vA-vB)/vB*100;
+    el.textContent=(pct>=0?'+':'')+pct.toFixed(0)+'%';
+    el.className=`cs-delta ${pct>0?'pos':pct<0?'neg':'neu'}`;
   }
 
-  setVal('cy-rides-a','cy-rides-b','cy-rides-delta', ridesA.length, ridesB.length, v=>v);
-  setVal('cy-dist-a','cy-dist-b','cy-dist-delta', dA, dB, v=>v.toFixed(0));
-  setVal('cy-time-a','cy-time-b','cy-time-delta', tA, tB, v=>fmtTime(v));
-  setVal('cy-elev-a','cy-elev-b','cy-elev-delta', eA, eB, v=>Math.round(v).toLocaleString());
-  setVal('cy-speed-a','cy-speed-b','cy-speed-delta', sA, sB, v=>v?v.toFixed(1):'—');
+  setVal('cy-rides-a','cy-rides-b','cy-rides-delta', ridesA.length,ridesB.length, v=>v);
+  setVal('cy-dist-a','cy-dist-b','cy-dist-delta',    dA,dB, v=>v.toFixed(0));
+  setVal('cy-time-a','cy-time-b','cy-time-delta',    tA,tB, v=>fmtTime(v));
+  setVal('cy-elev-a','cy-elev-b','cy-elev-delta',    eA,eB, v=>Math.round(v).toLocaleString());
+  setVal('cy-speed-a','cy-speed-b','cy-speed-delta', sA,sB, v=>v?v.toFixed(1):'—');
 
-  // Update table headers
-  document.getElementById('th-a-km').textContent = `${selectedYearA} — km`;
-  document.getElementById('th-a-km').style.color = 'var(--orange)';
-  document.getElementById('th-b-km').textContent = `${selectedYearB} — km`;
-  document.getElementById('th-b-km').style.color = 'var(--blue)';
-  document.getElementById('th-a-rides').textContent = `${selectedYearA} — sorties`;
-  document.getElementById('th-b-rides').textContent = `${selectedYearB} — sorties`;
+  document.getElementById('th-a-km').textContent=`${labelA} — km`;
+  document.getElementById('th-b-km').textContent=`${labelB} — km`;
+  document.getElementById('th-a-rides').textContent=`${labelA} — sorties`;
+  document.getElementById('th-b-rides').textContent=`${labelB} — sorties`;
+  document.getElementById('cy-list-a-title').textContent=`SORTIES VÉLO · ${labelA.toUpperCase()}`;
+  document.getElementById('cy-list-b-title').textContent=`SORTIES VÉLO · ${labelB.toUpperCase()}`;
 
-  // Update list titles
-  document.getElementById('cy-list-a-title').textContent = `SORTIES VÉLO ${selectedYearA}`;
-  document.getElementById('cy-list-b-title').textContent = `SORTIES VÉLO ${selectedYearB}`;
-
-  renderCyclingChart();
-  renderCyclingTable(ridesA, ridesB);
-  renderCyclingList('cycling-a-list','cy-a-badge', ridesA, selectedYearA);
-  renderCyclingList('cycling-b-list','cy-b-badge', ridesB, selectedYearB);
+  renderCyclingChart(ridesA,ridesB,labelA,labelB);
+  renderCyclingTable();
+  renderCyclingList('cycling-a-list','cy-a-badge',ridesA);
+  renderCyclingList('cycling-b-list','cy-b-badge',ridesB);
 }
 
 function setCyclingMetric(metric, btn) {
   currentCyclingMetric = metric;
-  document.querySelectorAll('.metric-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.metric-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderCyclingChart();
+  const {ridesA,ridesB,labelA,labelB}=getPeriodRides();
+  renderCyclingChart(ridesA,ridesB,labelA,labelB);
 }
 
-function renderCyclingChart() {
+function renderCyclingChart(ridesA, ridesB, labelA, labelB) {
   const ctx = document.getElementById('cyclingCompareChart').getContext('2d');
   if (cyclingChartInstance) cyclingChartInstance.destroy();
+  const unit={distance:'km',time:'h',elevation:'m',rides:'sorties'}[currentCyclingMetric];
+  let labels=[],dataA=[],dataB=[];
 
-  const wA = buildWeeklyBikeData(allActivities, selectedYearA);
-  const wB = buildWeeklyBikeData(allActivities, selectedYearB);
-
-  const labels=[], dataA=[], dataB=[];
-  for (let wk=1; wk<=52; wk++) {
-    labels.push(`S${wk}`);
-    const dA = wA[wk] || {distance:0,time:0,elevation:0,rides:0};
-    const dB = wB[wk] || {distance:0,time:0,elevation:0,rides:0};
-    const extract = (d) => {
-      if (currentCyclingMetric==='distance')  return parseFloat(d.distance.toFixed(1));
-      if (currentCyclingMetric==='time')      return parseFloat((d.time/3600).toFixed(2));
-      if (currentCyclingMetric==='elevation') return Math.round(d.elevation);
-      return d.rides;
-    };
-    dataA.push(extract(dA));
-    dataB.push(extract(dB));
+  if (cyMode==='year') {
+    const wA=buildWeeklyBikeData(allActivities,selectedYearA);
+    const wB=buildWeeklyBikeData(allActivities,selectedYearB);
+    for(let wk=1;wk<=52;wk++){
+      labels.push(`S${wk}`);
+      dataA.push(extractMetric(wA[wk]||{distance:0,time:0,elevation:0,rides:0}));
+      dataB.push(extractMetric(wB[wk]||{distance:0,time:0,elevation:0,rides:0}));
+    }
+    document.getElementById('cy-chart-title').textContent='PAR SEMAINE (ANNÉE COMPLÈTE)';
+    document.getElementById('cy-table-title').textContent='TABLEAU PAR SEMAINE';
+  } else {
+    for(let mo=0;mo<12;mo++){
+      labels.push(MONTHS_FR[mo]);
+      const getMonthMetric = (year) => {
+        const rides = allActivities.filter(a=>{const d=new Date(a.start_date);return isBikeActivity(a)&&d.getFullYear()===year&&d.getMonth()===mo;});
+        const agg={distance:0,time:0,elevation:0,rides:rides.length};
+        rides.forEach(a=>{agg.distance+=(a.distance||0)/1000;agg.time+=(a.moving_time||0);agg.elevation+=(a.total_elevation_gain||0);});
+        return extractMetric(agg);
+      };
+      dataA.push(getMonthMetric(selectedYearA));
+      dataB.push(getMonthMetric(selectedYearB));
+    }
+    document.getElementById('cy-chart-title').textContent='MOIS PAR MOIS';
+    document.getElementById('cy-table-title').textContent='TABLEAU MOIS PAR MOIS';
   }
 
-  const unitLabel = {distance:'km',time:'h',elevation:'m',rides:'sorties'}[currentCyclingMetric];
-
-  cyclingChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: String(selectedYearA), data: dataA, backgroundColor:'rgba(252,76,2,0.7)', borderColor:'#FC4C02', borderWidth:1, borderRadius:3 },
-        { label: String(selectedYearB), data: dataB, backgroundColor:'rgba(96,165,250,0.45)', borderColor:'#60a5fa', borderWidth:1, borderRadius:3 }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins: {
-        legend: { display:true, labels:{ color:'rgba(240,236,230,0.6)', font:{size:11}, boxWidth:12, boxHeight:12 } },
-        tooltip: {
-          backgroundColor:'#1e1e1e', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#f0ece6',
-          callbacks:{ label: ctx => `${ctx.dataset.label}: ${ctx.raw} ${unitLabel}` }
-        }
+  cyclingChartInstance = new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:labelA,data:dataA,backgroundColor:'rgba(252,76,2,0.75)',borderColor:'#FC4C02',borderWidth:1,borderRadius:4},
+      {label:labelB,data:dataB,backgroundColor:'rgba(96,165,250,0.5)',borderColor:'#60a5fa',borderWidth:1,borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{color:'rgba(240,236,230,0.65)',font:{size:11},boxWidth:12,boxHeight:12}},
+        tooltip:{backgroundColor:'#1e1e1e',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#f0ece6',
+          callbacks:{label:c=>`${c.dataset.label}: ${c.raw} ${unit}`}}
       },
-      scales: {
-        x: { grid:{color:'rgba(255,255,255,0.03)'}, ticks:{color:'rgba(240,236,230,0.35)',font:{size:9},maxTicksLimit:18} },
-        y: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'rgba(240,236,230,0.4)',font:{size:10},callback:v=>v+' '+unitLabel} }
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'rgba(240,236,230,0.35)',font:{size:9},maxTicksLimit:20}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,230,0.4)',font:{size:10},callback:v=>v+' '+unit}}
       }
     }
   });
 }
 
-function renderCyclingTable(ridesA, ridesB) {
-  const wA = buildWeeklyBikeData(allActivities, selectedYearA);
-  const wB = buildWeeklyBikeData(allActivities, selectedYearB);
+function renderCyclingTable() {
+  let rows=[];
 
-  const allWeeks = new Set([...Object.keys(wA),...Object.keys(wB)].map(Number));
-  const maxWeek = allWeeks.size ? Math.max(...allWeeks) : 52;
-  const maxDist = Math.max(...Array.from(allWeeks).map(w => Math.max((wA[w]||{distance:0}).distance,(wB[w]||{distance:0}).distance)),1);
+  if (cyMode==='year') {
+    const wA=buildWeeklyBikeData(allActivities,selectedYearA);
+    const wB=buildWeeklyBikeData(allActivities,selectedYearB);
+    const allWks=new Set([...Object.keys(wA),...Object.keys(wB)].map(Number));
+    const maxWk=allWks.size?Math.max(...allWks):52;
+    const maxDist=Math.max(...[...allWks].map(w=>Math.max((wA[w]||{distance:0}).distance,(wB[w]||{distance:0}).distance)),1);
+    document.getElementById('cy-table-badge').textContent=`${maxWk} SEMAINES`;
+    document.getElementById('th-period').textContent='Sem.';
+    for(let wk=1;wk<=maxWk;wk++){
+      const {start,end}=getWeekStartEnd(selectedYearA,wk);
+      rows.push({key:`S${wk}`,dA:wA[wk]||{distance:0,rides:0},dB:wB[wk]||{distance:0,rides:0},s:start,e:end,maxDist});
+    }
+  } else {
+    document.getElementById('cy-table-badge').textContent='12 MOIS';
+    document.getElementById('th-period').textContent='Mois';
+    const getMo = (year, mo) => {
+      const rides = allActivities.filter(a=>{const d=new Date(a.start_date);return isBikeActivity(a)&&d.getFullYear()===year&&d.getMonth()===mo;});
+      const agg={distance:0,rides:rides.length};
+      rides.forEach(a=>{agg.distance+=(a.distance||0)/1000;});
+      return agg;
+    };
+    const allData = Array.from({length:12},(_,mo)=>({a:getMo(selectedYearA,mo),b:getMo(selectedYearB,mo)}));
+    const maxDist = Math.max(...allData.map(d=>Math.max(d.a.distance,d.b.distance)),1);
+    for(let mo=0;mo<12;mo++){
+      rows.push({key:MONTHS_LONG[mo],dA:allData[mo].a,dB:allData[mo].b,
+        s:new Date(selectedYearA,mo,1),e:new Date(selectedYearA,mo+1,0),maxDist,noDateRange:true});
+    }
+  }
 
-  document.getElementById('cy-table-badge').textContent = `${maxWeek} SEMAINES`;
-
-  const tbody = document.getElementById('cycling-table-body');
-  let html = '';
-  for (let wk=1; wk<=maxWeek; wk++) {
-    const dA = wA[wk]||{distance:0,rides:0};
-    const dB = wB[wk]||{distance:0,rides:0};
-    const {start,end} = getWeekStartEnd(selectedYearA, wk);
-    const fmt = d => d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
-    const diff = dA.distance - dB.distance;
-    const diffCls = diff>0.5?'pos':diff<-0.5?'neg':'neu';
-    const diffStr = diff===0?'—':(diff>0?'+':'')+diff.toFixed(0)+' km';
-    const hasAny = dA.distance>0||dB.distance>0;
-    const barAh = Math.round((dA.distance/maxDist)*24);
-    const barBh = Math.round((dB.distance/maxDist)*24);
-
-    html += `<tr style="${!hasAny?'opacity:0.25':''}">
-      <td><span class="week-num">S${wk}</span></td>
-      <td><span class="week-dates">${fmt(start)} – ${fmt(end)}</span></td>
+  const fmt=d=>d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+  document.getElementById('cycling-table-body').innerHTML=rows.map(({key,dA,dB,s,e,maxDist,noDateRange})=>{
+    const diff=dA.distance-dB.distance;
+    const dc=diff>0.5?'pos':diff<-0.5?'neg':'neu';
+    const ds=diff===0?'—':(diff>0?'+':'')+diff.toFixed(0)+' km';
+    const hasAny=dA.distance>0||dB.distance>0;
+    const bA=Math.round((dA.distance/maxDist)*24),bB=Math.round((dB.distance/maxDist)*24);
+    const dateCell=noDateRange?`<span class="week-dates">${selectedYearA} vs ${selectedYearB}</span>`:`<span class="week-dates">${fmt(s)} – ${fmt(e)}</span>`;
+    return `<tr style="${!hasAny?'opacity:0.22':''}">
+      <td><span class="week-num">${key}</span></td>
+      <td>${dateCell}</td>
       <td><span class="val-2026">${dA.distance>0?dA.distance.toFixed(1):'—'}</span></td>
       <td><span class="val-2025">${dB.distance>0?dB.distance.toFixed(1):'—'}</span></td>
-      <td><span class="diff-pill ${diffCls}">${diffStr}</span></td>
+      <td><span class="diff-pill ${dc}">${ds}</span></td>
       <td style="text-align:center">${dA.rides||'—'}</td>
       <td style="text-align:center">${dB.rides||'—'}</td>
       <td><div class="mini-bar-wrap">
-        <div class="mini-bar" style="height:${barAh}px;background:var(--orange)"></div>
-        <div class="mini-bar" style="height:${barBh}px;background:var(--blue)"></div>
+        <div class="mini-bar" style="height:${bA}px;background:var(--orange)"></div>
+        <div class="mini-bar" style="height:${bB}px;background:var(--blue)"></div>
       </div></td>
     </tr>`;
-  }
-  tbody.innerHTML = html;
+  }).join('');
 }
 
-function renderCyclingList(containerId, badgeId, rides, year) {
-  const sorted = [...rides].sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
-  document.getElementById(badgeId).textContent = `${sorted.length} SORTIES`;
-  const list = document.getElementById(containerId);
-  list.innerHTML = sorted.map(a => {
-    const emoji = a.type==='VirtualRide'?'🖥️':a.type==='GravelRide'?'🪨':'🚴';
-    const date = new Date(a.start_date).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
-    const speed = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '';
-    const elev  = a.total_elevation_gain ? '⛰ '+Math.round(a.total_elevation_gain)+'m' : '';
+function renderCyclingList(containerId, badgeId, rides) {
+  const sorted=[...rides].sort((a,b)=>new Date(b.start_date)-new Date(a.start_date));
+  document.getElementById(badgeId).textContent=`${sorted.length} SORTIES`;
+  document.getElementById(containerId).innerHTML=sorted.map(a=>{
+    const emoji=a.type==='VirtualRide'?'🖥️':a.type==='GravelRide'?'🪨':'🚴';
+    const date=new Date(a.start_date).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+    const speed=a.average_speed?(a.average_speed*3.6).toFixed(1)+' km/h':'';
+    const elev=a.total_elevation_gain?'⛰ '+Math.round(a.total_elevation_gain)+'m':'';
     return `<div class="act-item">
       <div class="act-icon ride">${emoji}</div>
       <div class="act-info">
@@ -1509,7 +1650,6 @@ function renderCyclingList(containerId, badgeId, rides, year) {
     </div>`;
   }).join('');
 }
-
 /* ─── Auth helpers ─── */
 function getRedirectUri() {
   return window.location.href.split('?')[0].split('#')[0];
