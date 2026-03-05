@@ -635,12 +635,231 @@
     display: none;
   }
 
+  /* ── NAV TABS ── */
+  .dash-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    background: rgba(10,10,10,0.6);
+  }
+
+  .nav-tab {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-tab:hover { color: var(--text); }
+
+  .nav-tab.active {
+    color: var(--orange);
+    border-bottom-color: var(--orange);
+  }
+
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  /* ── CYCLING TAB ── */
+  .cycling-hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .cycling-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .cycling-stat::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--c1, var(--orange)), var(--c2, #ff8c00));
+  }
+
+  .cs-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .cs-vals {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .cs-2026 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--orange);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .cs-vs {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .cs-2025 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: var(--blue);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .cs-delta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    margin-left: auto;
+  }
+
+  .cs-delta.pos { background: rgba(74,222,128,0.15); color: var(--green); }
+  .cs-delta.neg { background: rgba(252,76,2,0.12); color: var(--orange); }
+  .cs-delta.neu { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+  /* comparison chart */
+  .compare-chart-wrap {
+    position: relative;
+    height: 280px;
+  }
+
+  /* metric switcher */
+  .metric-tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 0.2rem;
+  }
+
+  .metric-tab {
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    color: var(--muted);
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .metric-tab.active { background: var(--surface); color: var(--text); }
+
+  /* rides table */
+  .rides-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .rides-table th {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  .rides-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .rides-table tr:last-child td { border-bottom: none; }
+  .rides-table tr:hover td { background: var(--surface2); }
+
+  .week-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .week-dates { font-size: 0.68rem; color: var(--muted); }
+
+  .val-2026 { font-weight: 600; color: var(--orange); }
+  .val-2025 { color: var(--blue); }
+
+  .diff-pill {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .diff-pill.pos { background: rgba(74,222,128,0.15); color: var(--green); }
+  .diff-pill.neg { background: rgba(252,76,2,0.12); color: #f87171; }
+  .diff-pill.neu { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+  .mini-bar-wrap {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: 24px;
+  }
+
+  .mini-bar {
+    width: 8px;
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
   /* responsive */
   @media (max-width: 768px) {
     .dash-header { padding: 1rem; }
     .dash-main { padding: 1rem; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .heatmap-grid { grid-template-columns: repeat(26, 1fr); }
+    .dash-nav { padding: 0 1rem; overflow-x: auto; }
+    .nav-tab { white-space: nowrap; padding: 0.85rem 1rem; }
+    .rides-table { font-size: 0.75rem; }
+    .rides-table th, .rides-table td { padding: 0.6rem 0.5rem; }
   }
 </style>
 </head>
@@ -709,6 +928,13 @@
     </div>
   </header>
 
+  <nav class="dash-nav">
+    <button class="nav-tab active" onclick="switchTab('overview',this)">📊 Vue générale</button>
+    <button class="nav-tab" onclick="switchTab('cycling',this)">🚴 Vélo 2025 vs 2026</button>
+  </nav>
+
+  <!-- TAB: OVERVIEW -->
+  <div id="tab-overview" class="tab-page active">
   <main class="dash-main">
     <div class="period-bar">
       <div class="period-label" id="period-title">MES STATS</div>
@@ -751,7 +977,6 @@
 
     <!-- Charts row -->
     <div class="dash-cols">
-      <!-- Distance chart -->
       <div class="card">
         <div class="card-head">
           <span class="card-title">DISTANCE PAR SEMAINE</span>
@@ -763,17 +988,13 @@
           </div>
         </div>
       </div>
-
-      <!-- Heart Rate Zones -->
       <div class="card">
         <div class="card-head">
           <span class="card-title">ZONES DE FRÉQUENCE</span>
           <span class="card-badge">CARDIO</span>
         </div>
         <div class="card-body">
-          <div class="zone-bars" id="zone-bars">
-            <!-- filled by JS -->
-          </div>
+          <div class="zone-bars" id="zone-bars"></div>
         </div>
       </div>
     </div>
@@ -804,11 +1025,140 @@
         <span class="card-title">ACTIVITÉS RÉCENTES</span>
         <span class="card-badge" id="act-count-badge">—</span>
       </div>
-      <div class="activity-list" id="activity-list">
-        <!-- filled by JS -->
-      </div>
+      <div class="activity-list" id="activity-list"></div>
     </div>
   </main>
+  </div><!-- end tab-overview -->
+
+  <!-- TAB: CYCLING -->
+  <div id="tab-cycling" class="tab-page">
+  <main class="dash-main">
+
+    <!-- Hero stats 2025 vs 2026 -->
+    <div style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px">VÉLO — COMPARAISON ANNUELLE</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">Toutes les sorties vélo (Ride + VirtualRide) — semaine par semaine</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;font-size:0.8rem">
+          <span><span class="legend-dot" style="background:var(--orange)"></span> 2026</span>
+          <span><span class="legend-dot" style="background:var(--blue)"></span> 2025</span>
+        </div>
+      </div>
+      <div class="cycling-hero" id="cycling-hero">
+        <div class="cycling-stat">
+          <div class="cs-label">🚴 Sorties</div>
+          <div class="cs-vals">
+            <span class="cs-2026" id="cy-rides-2026">—</span>
+            <span class="cs-vs">vs</span>
+            <span class="cs-2025" id="cy-rides-2025">—</span>
+            <span class="cs-delta neu" id="cy-rides-delta">—</span>
+          </div>
+        </div>
+        <div class="cycling-stat">
+          <div class="cs-label">📏 Distance (km)</div>
+          <div class="cs-vals">
+            <span class="cs-2026" id="cy-dist-2026">—</span>
+            <span class="cs-vs">vs</span>
+            <span class="cs-2025" id="cy-dist-2025">—</span>
+            <span class="cs-delta neu" id="cy-dist-delta">—</span>
+          </div>
+        </div>
+        <div class="cycling-stat">
+          <div class="cs-label">⏱️ Temps</div>
+          <div class="cs-vals">
+            <span class="cs-2026" id="cy-time-2026">—</span>
+            <span class="cs-vs">vs</span>
+            <span class="cs-2025" id="cy-time-2025">—</span>
+            <span class="cs-delta neu" id="cy-time-delta">—</span>
+          </div>
+        </div>
+        <div class="cycling-stat">
+          <div class="cs-label">⛰️ Dénivelé (m)</div>
+          <div class="cs-vals">
+            <span class="cs-2026" id="cy-elev-2026">—</span>
+            <span class="cs-vs">vs</span>
+            <span class="cs-2025" id="cy-elev-2025">—</span>
+            <span class="cs-delta neu" id="cy-elev-delta">—</span>
+          </div>
+        </div>
+        <div class="cycling-stat">
+          <div class="cs-label">⚡ Vitesse moy. (km/h)</div>
+          <div class="cs-vals">
+            <span class="cs-2026" id="cy-speed-2026">—</span>
+            <span class="cs-vs">vs</span>
+            <span class="cs-2025" id="cy-speed-2025">—</span>
+            <span class="cs-delta neu" id="cy-speed-delta">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison chart -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title">SEMAINE PAR SEMAINE</span>
+        <div class="metric-tabs">
+          <button class="metric-tab active" onclick="setCyclingMetric('distance',this)">Distance</button>
+          <button class="metric-tab" onclick="setCyclingMetric('time',this)">Temps</button>
+          <button class="metric-tab" onclick="setCyclingMetric('elevation',this)">Dénivelé</button>
+          <button class="metric-tab" onclick="setCyclingMetric('rides',this)">Sorties</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="compare-chart-wrap">
+          <canvas id="cyclingCompareChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Week-by-week table -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">TABLEAU DÉTAILLÉ PAR SEMAINE</span>
+        <span class="card-badge" id="cy-table-badge">—</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rides-table">
+          <thead>
+            <tr>
+              <th>Sem.</th>
+              <th>Dates</th>
+              <th style="color:var(--orange)">2026 — km</th>
+              <th style="color:var(--blue)">2025 — km</th>
+              <th>Écart km</th>
+              <th style="color:var(--orange)">2026 — sorties</th>
+              <th style="color:var(--blue)">2025 — sorties</th>
+              <th>Visuel</th>
+            </tr>
+          </thead>
+          <tbody id="cycling-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Individual rides 2025 -->
+    <div class="card" style="margin-top:1.5rem">
+      <div class="card-head">
+        <span class="card-title">TOUTES LES SORTIES VÉLO 2025</span>
+        <span class="card-badge" id="cy-2025-badge">—</span>
+      </div>
+      <div class="activity-list" id="cycling-2025-list"></div>
+    </div>
+
+    <!-- Individual rides 2026 -->
+    <div class="card" style="margin-top:1.5rem;margin-bottom:2rem">
+      <div class="card-head">
+        <span class="card-title">TOUTES LES SORTIES VÉLO 2026</span>
+        <span class="card-badge" id="cy-2026-badge">—</span>
+      </div>
+      <div class="activity-list" id="cycling-2026-list"></div>
+    </div>
+
+  </main>
+  </div><!-- end tab-cycling -->
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -817,7 +1167,263 @@
 let accessToken = null;
 let allActivities = [];
 let chartInstance = null;
+let cyclingChartInstance = null;
 let currentPeriodWeeks = 4;
+let currentCyclingMetric = 'distance';
+
+/* ─── Tab navigation ─── */
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'cycling') renderCyclingTab();
+}
+
+/* ─── Cycling helpers ─── */
+function isBikeActivity(a) {
+  return a.type === 'Ride' || a.type === 'VirtualRide' || a.type === 'GravelRide' || a.type === 'MountainBikeRide' || a.type === 'EBikeRide';
+}
+
+function getISOWeek(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function getWeekStartEnd(year, week) {
+  const simple = new Date(year, 0, 1 + (week - 1) * 7);
+  const dow = simple.getDay();
+  const weekStart = new Date(simple);
+  weekStart.setDate(simple.getDate() - (dow <= 4 ? dow - 1 : dow - 8));
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  return { start: weekStart, end: weekEnd };
+}
+
+function buildWeeklyBikeData(acts, year) {
+  const rides = acts.filter(a => isBikeActivity(a) && new Date(a.start_date).getFullYear() === year);
+  const byWeek = {};
+  rides.forEach(a => {
+    const w = getISOWeek(a.start_date);
+    if (!byWeek[w]) byWeek[w] = { distance: 0, time: 0, elevation: 0, rides: 0, speedSum: 0, speedCount: 0 };
+    byWeek[w].distance += (a.distance || 0) / 1000;
+    byWeek[w].time += (a.moving_time || 0);
+    byWeek[w].elevation += (a.total_elevation_gain || 0);
+    byWeek[w].rides += 1;
+    if (a.average_speed) { byWeek[w].speedSum += a.average_speed * 3.6; byWeek[w].speedCount++; }
+  });
+  return byWeek;
+}
+
+function renderCyclingTab() {
+  const rides2025 = allActivities.filter(a => isBikeActivity(a) && new Date(a.start_date).getFullYear() === 2025);
+  const rides2026 = allActivities.filter(a => isBikeActivity(a) && new Date(a.start_date).getFullYear() === 2026);
+
+  const sum = (arr, key) => arr.reduce((s,a) => s + (a[key]||0), 0);
+  const avgSpeed = arr => {
+    const withSpeed = arr.filter(a => a.average_speed);
+    return withSpeed.length ? (withSpeed.reduce((s,a) => s + a.average_speed * 3.6, 0) / withSpeed.length) : 0;
+  };
+
+  const d25 = sum(rides2025,'distance')/1000, d26 = sum(rides2026,'distance')/1000;
+  const t25 = sum(rides2025,'moving_time'), t26 = sum(rides2026,'moving_time');
+  const e25 = sum(rides2025,'total_elevation_gain'), e26 = sum(rides2026,'total_elevation_gain');
+  const s25 = avgSpeed(rides2025), s26 = avgSpeed(rides2026);
+
+  function setDelta(id, v26, v25, fmt) {
+    const el = document.getElementById(id);
+    if (!v25) { el.textContent = '—'; el.className = 'cs-delta neu'; return; }
+    const pct = ((v26 - v25) / v25 * 100);
+    const sign = pct >= 0 ? '+' : '';
+    el.textContent = `${sign}${pct.toFixed(0)}%`;
+    el.className = `cs-delta ${pct > 0 ? 'pos' : pct < 0 ? 'neg' : 'neu'}`;
+  }
+
+  document.getElementById('cy-rides-2026').textContent = rides2026.length;
+  document.getElementById('cy-rides-2025').textContent = rides2025.length;
+  setDelta('cy-rides-delta', rides2026.length, rides2025.length);
+
+  document.getElementById('cy-dist-2026').textContent = d26.toFixed(0);
+  document.getElementById('cy-dist-2025').textContent = d25.toFixed(0);
+  setDelta('cy-dist-delta', d26, d25);
+
+  document.getElementById('cy-time-2026').textContent = fmtTime(t26);
+  document.getElementById('cy-time-2025').textContent = fmtTime(t25);
+  setDelta('cy-time-delta', t26, t25);
+
+  document.getElementById('cy-elev-2026').textContent = Math.round(e26).toLocaleString();
+  document.getElementById('cy-elev-2025').textContent = Math.round(e25).toLocaleString();
+  setDelta('cy-elev-delta', e26, e25);
+
+  document.getElementById('cy-speed-2026').textContent = s26 ? s26.toFixed(1) : '—';
+  document.getElementById('cy-speed-2025').textContent = s25 ? s25.toFixed(1) : '—';
+  setDelta('cy-speed-delta', s26, s25);
+
+  renderCyclingChart();
+  renderCyclingTable(rides2025, rides2026);
+  renderCyclingList('cycling-2025-list','cy-2025-badge', rides2025);
+  renderCyclingList('cycling-2026-list','cy-2026-badge', rides2026);
+}
+
+function setCyclingMetric(metric, btn) {
+  currentCyclingMetric = metric;
+  document.querySelectorAll('.metric-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCyclingChart();
+}
+
+function renderCyclingChart() {
+  const ctx = document.getElementById('cyclingCompareChart').getContext('2d');
+  if (cyclingChartInstance) cyclingChartInstance.destroy();
+
+  const w25 = buildWeeklyBikeData(allActivities, 2025);
+  const w26 = buildWeeklyBikeData(allActivities, 2026);
+
+  // Build 52-week labels (use 2025 week numbers)
+  const labels = [], data25 = [], data26 = [];
+  for (let wk = 1; wk <= 52; wk++) {
+    const { start } = getWeekStartEnd(2025, wk);
+    labels.push(`S${wk}`);
+    const d25 = w25[wk] || { distance:0, time:0, elevation:0, rides:0 };
+    const d26 = w26[wk] || { distance:0, time:0, elevation:0, rides:0 };
+    if (currentCyclingMetric === 'distance') {
+      data25.push(parseFloat(d25.distance.toFixed(1)));
+      data26.push(parseFloat(d26.distance.toFixed(1)));
+    } else if (currentCyclingMetric === 'time') {
+      data25.push(parseFloat((d25.time / 3600).toFixed(2)));
+      data26.push(parseFloat((d26.time / 3600).toFixed(2)));
+    } else if (currentCyclingMetric === 'elevation') {
+      data25.push(Math.round(d25.elevation));
+      data26.push(Math.round(d26.elevation));
+    } else {
+      data25.push(d25.rides);
+      data26.push(d26.rides);
+    }
+  }
+
+  const unitLabel = { distance:'km', time:'h', elevation:'m', rides:'sorties' }[currentCyclingMetric];
+
+  cyclingChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '2026',
+          data: data26,
+          backgroundColor: 'rgba(252,76,2,0.7)',
+          borderColor: '#FC4C02',
+          borderWidth: 1,
+          borderRadius: 3,
+        },
+        {
+          label: '2025',
+          data: data25,
+          backgroundColor: 'rgba(96,165,250,0.45)',
+          borderColor: '#60a5fa',
+          borderWidth: 1,
+          borderRadius: 3,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: 'rgba(240,236,230,0.6)', font: { size: 11 }, boxWidth: 12, boxHeight: 12 }
+        },
+        tooltip: {
+          backgroundColor: '#1e1e1e',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#f0ece6',
+          callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw} ${unitLabel}` }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(240,236,230,0.35)', font: { size: 9 }, maxTicksLimit: 18 } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(240,236,230,0.4)', font: { size: 10 }, callback: v => v + ' ' + unitLabel } }
+      }
+    }
+  });
+}
+
+function renderCyclingTable(rides2025, rides2026) {
+  const w25 = buildWeeklyBikeData(allActivities, 2025);
+  const w26 = buildWeeklyBikeData(allActivities, 2026);
+
+  // Find max week with data
+  const allWeeks = new Set([...Object.keys(w25), ...Object.keys(w26)].map(Number));
+  const maxWeek = allWeeks.size ? Math.max(...allWeeks) : 52;
+  const maxDist = Math.max(...Array.from(allWeeks).map(w => Math.max((w25[w]||{distance:0}).distance, (w26[w]||{distance:0}).distance)), 1);
+
+  document.getElementById('cy-table-badge').textContent = `${maxWeek} SEMAINES`;
+
+  const tbody = document.getElementById('cycling-table-body');
+  let html = '';
+  for (let wk = 1; wk <= maxWeek; wk++) {
+    const d25 = w25[wk] || { distance:0, rides:0, elevation:0 };
+    const d26 = w26[wk] || { distance:0, rides:0, elevation:0 };
+    const { start, end } = getWeekStartEnd(2025, wk);
+    const fmt = d => d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+    const diff = d26.distance - d25.distance;
+    const diffSign = diff > 0.5 ? 'pos' : diff < -0.5 ? 'neg' : 'neu';
+    const diffStr = diff === 0 ? '—' : (diff > 0 ? '+' : '') + diff.toFixed(0) + ' km';
+
+    const hasAny = d25.distance > 0 || d26.distance > 0;
+    const bar26h = Math.round((d26.distance / maxDist) * 24);
+    const bar25h = Math.round((d25.distance / maxDist) * 24);
+
+    html += `
+      <tr style="${!hasAny ? 'opacity:0.3' : ''}">
+        <td><span class="week-num">S${wk}</span></td>
+        <td><span class="week-dates">${fmt(start)} – ${fmt(end)}</span></td>
+        <td><span class="val-2026">${d26.distance > 0 ? d26.distance.toFixed(1) : '—'}</span></td>
+        <td><span class="val-2025">${d25.distance > 0 ? d25.distance.toFixed(1) : '—'}</span></td>
+        <td><span class="diff-pill ${diffSign}">${diffStr}</span></td>
+        <td style="text-align:center">${d26.rides || '—'}</td>
+        <td style="text-align:center">${d25.rides || '—'}</td>
+        <td>
+          <div class="mini-bar-wrap">
+            <div class="mini-bar" style="height:${bar26h}px;background:var(--orange)"></div>
+            <div class="mini-bar" style="height:${bar25h}px;background:var(--blue)"></div>
+          </div>
+        </td>
+      </tr>`;
+  }
+  tbody.innerHTML = html;
+}
+
+function renderCyclingList(containerId, badgeId, rides) {
+  const sorted = [...rides].sort((a,b) => new Date(b.start_date) - new Date(a.start_date));
+  document.getElementById(badgeId).textContent = `${sorted.length} SORTIES`;
+  const list = document.getElementById(containerId);
+  list.innerHTML = sorted.map(a => {
+    const emoji = a.type === 'VirtualRide' ? '🖥️' : a.type === 'GravelRide' ? '🪨' : '🚴';
+    const date = new Date(a.start_date).toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' });
+    const dist = fmtDist(a.distance);
+    const time = fmtTime(a.moving_time);
+    const speed = a.average_speed ? (a.average_speed * 3.6).toFixed(1) + ' km/h' : '';
+    const elev = a.total_elevation_gain ? '⛰ ' + Math.round(a.total_elevation_gain) + 'm' : '';
+    return `
+      <div class="act-item">
+        <div class="act-icon ride">${emoji}</div>
+        <div class="act-info">
+          <div class="act-name">${a.name}</div>
+          <div class="act-meta">${date} · ${a.type}${speed ? ' · ' + speed : ''}${elev ? ' · ' + elev : ''}${a.average_heartrate ? ' · ♥ ' + Math.round(a.average_heartrate) + ' bpm' : ''}</div>
+        </div>
+        <div class="act-stats">
+          <div class="act-dist">${dist} km</div>
+          <div class="act-time">${time}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
 
 /* ─── Auth helpers ─── */
 function getRedirectUri() {
@@ -1132,7 +1738,9 @@ function generateDemoActivities() {
   const types = ['Run','Run','Run','Ride','Walk','Hike','Swim'];
   const names = ['Sortie matinale','Interval training','Long run du dimanche','Sortie vélo','Marche récup','Trail en montagne','Natation endurance','Fartlek','Tempo run','Gravel ride'];
   const acts = [];
-  for (let i = 0; i < 120; i++) {
+
+  // General activities last 12 months
+  for (let i = 0; i < 100; i++) {
     const daysAgo = Math.floor(Math.random() * 365);
     const type = types[Math.floor(Math.random() * types.length)];
     const dist = type === 'Run' ? (4 + Math.random() * 20) * 1000
@@ -1149,9 +1757,52 @@ function generateDemoActivities() {
       total_elevation_gain: Math.round(Math.random() * 400),
       kilojoules: movingTime * 0.3,
       average_heartrate: 130 + Math.round(Math.random() * 40),
+      average_speed: type === 'Ride' ? (25 + Math.random() * 15) / 3.6 : null,
       start_date: new Date(Date.now() - daysAgo * 86400000 - Math.random() * 3600000 * 12).toISOString(),
     });
   }
+
+  // Dedicated cycling in 2025 (Jan–Dec 2025)
+  const bikeNames = ['Sortie gravel','Montée du col','Boucle campagne','Sortie endurance','Tempo vélo','Récup pédalage','Grand fond','Intervales vélo','Tour du lac','Matinale 2 roues'];
+  for (let i = 0; i < 70; i++) {
+    const date2025 = new Date(2025, 0, 1);
+    date2025.setDate(date2025.getDate() + Math.floor(Math.random() * 365));
+    const dist = (30 + Math.random() * 100) * 1000;
+    const movingTime = Math.round((dist / 1000) / (28 + Math.random() * 10) * 3600);
+    acts.push({
+      id: 200 + i,
+      name: bikeNames[Math.floor(Math.random() * bikeNames.length)],
+      type: Math.random() > 0.2 ? 'Ride' : 'VirtualRide',
+      distance: dist,
+      moving_time: movingTime,
+      total_elevation_gain: Math.round(200 + Math.random() * 1500),
+      kilojoules: movingTime * 0.35,
+      average_heartrate: 135 + Math.round(Math.random() * 35),
+      average_speed: (28 + Math.random() * 10) / 3.6,
+      start_date: date2025.toISOString(),
+    });
+  }
+
+  // Dedicated cycling in 2026 (Jan–Mar 2026, fewer weeks)
+  for (let i = 0; i < 25; i++) {
+    const date2026 = new Date(2026, 0, 1);
+    date2026.setDate(date2026.getDate() + Math.floor(Math.random() * 63)); // ~9 weeks
+    const dist = (35 + Math.random() * 110) * 1000;
+    const movingTime = Math.round((dist / 1000) / (29 + Math.random() * 10) * 3600);
+    acts.push({
+      id: 300 + i,
+      name: bikeNames[Math.floor(Math.random() * bikeNames.length)],
+      type: Math.random() > 0.15 ? 'Ride' : 'VirtualRide',
+      distance: dist,
+      moving_time: movingTime,
+      total_elevation_gain: Math.round(250 + Math.random() * 1800),
+      kilojoules: movingTime * 0.38,
+      average_heartrate: 138 + Math.round(Math.random() * 32),
+      average_speed: (29 + Math.random() * 10) / 3.6,
+      start_date: date2026.toISOString(),
+    });
+  }
+
   return acts.sort((a,b) => new Date(b.start_date) - new Date(a.start_date));
 }
 
