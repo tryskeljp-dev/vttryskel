@@ -741,6 +741,87 @@
     flex-shrink: 0;
   }
 
+  /* ── YTD BANNER ── */
+  .ytd-banner {
+    background: var(--surface);
+    border: 1px solid rgba(252,76,2,0.25);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ytd-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(252,76,2,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .ytd-banner-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .ytd-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--orange);
+  }
+
+  .ytd-note {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .ytd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .ytd-year-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem 1rem 1.4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ytd-year-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 0.6rem;
+  }
+
+  .ytd-rows { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .ytd-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+  }
+
+  .ytd-row-label { color: var(--muted); }
+  .ytd-row-val   { font-weight: 600; }
+
+  .ytd-accent-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+  }
+
   /* ── YEAR SELECTOR (legacy kept for compat) ── */
   .year-selector-bar {
     display: flex;
@@ -1212,6 +1293,15 @@
         <div class="cs-vals"><span class="cs-2026" id="cy-speed-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-speed-b">—</span><span class="cs-delta neu" id="cy-speed-delta">—</span></div></div>
     </div>
 
+    <!-- YTD cumul banner -->
+    <div class="ytd-banner" id="ytd-banner">
+      <div class="ytd-banner-head">
+        <span class="ytd-title">📅 CUMUL DU 1er JANVIER AU <span id="ytd-date-label">—</span></span>
+        <span class="ytd-note">Même période pour chaque année sélectionnée</span>
+      </div>
+      <div class="ytd-grid" id="ytd-grid"><!-- filled by JS --></div>
+    </div>
+
     <!-- Chart -->
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-head">
@@ -1509,6 +1599,7 @@ function renderCyclingTab() {
 
   renderCyclingChart(ridesA,ridesB,labelA,labelB);
   renderCyclingTable();
+  renderYTD();
   renderCyclingList('cycling-a-list','cy-a-badge',ridesA);
   renderCyclingList('cycling-b-list','cy-b-badge',ridesB);
 }
@@ -1626,6 +1717,60 @@ function renderCyclingTable() {
         <div class="mini-bar" style="height:${bB}px;background:var(--blue)"></div>
       </div></td>
     </tr>`;
+  }).join('');
+}
+
+function renderYTD() {
+  const now    = new Date();
+  const dayOfYear = d => {
+    const start = new Date(d.getFullYear(), 0, 0);
+    return Math.floor((d - start) / 86400000);
+  };
+  const currentDOY = dayOfYear(now);
+
+  // Collect all years that have bike data
+  const years = getAvailableYears();
+
+  // Format the current date label (e.g. "6 mars")
+  const dateLabel = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+  document.getElementById('ytd-date-label').textContent = dateLabel.toUpperCase();
+
+  const colors = ['var(--orange)','var(--blue)','var(--green)','var(--purple)','#facc15','#f472b6'];
+
+  const grid = document.getElementById('ytd-grid');
+  grid.innerHTML = years.map((year, idx) => {
+    // For past years: cutoff = same calendar day (month+day) in that year
+    // For current year: use today
+    const cutoff = new Date(year, now.getMonth(), now.getDate(), 23, 59, 59);
+
+    const yearRides = allActivities.filter(a => {
+      if (!isBikeActivity(a)) return false;
+      const d = new Date(a.start_date);
+      return d.getFullYear() === year && d <= cutoff;
+    });
+
+    const dist  = yearRides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    const time  = yearRides.reduce((s,a) => s + (a.moving_time||0), 0);
+    const elev  = yearRides.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
+    const rides = yearRides.length;
+    const wsArr = yearRides.filter(a => a.average_speed);
+    const speed = wsArr.length ? wsArr.reduce((s,a) => s + a.average_speed*3.6, 0) / wsArr.length : 0;
+
+    const color = colors[idx % colors.length];
+    const isSelected = year === selectedYearA || year === selectedYearB;
+
+    return `
+      <div class="ytd-year-block" style="${isSelected ? 'border-color:'+color+';' : ''}">
+        <div class="ytd-accent-bar" style="background:${color}"></div>
+        <div class="ytd-year-label" style="color:${color}">${year}</div>
+        <div class="ytd-rows">
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${rides}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${dist.toFixed(0)} km</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${fmtTime(time)}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${Math.round(elev).toLocaleString()} m</span></div>
+          ${speed ? `<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${speed.toFixed(1)} km/h</span></div>` : ''}
+        </div>
+      </div>`;
   }).join('');
 }
 
