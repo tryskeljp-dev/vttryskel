@@ -1302,6 +1302,15 @@
       <div class="ytd-grid" id="ytd-grid"><!-- filled by JS --></div>
     </div>
 
+    <!-- Same week banner -->
+    <div class="ytd-banner" id="ytw-banner" style="border-color:rgba(96,165,250,0.25)">
+      <div class="ytd-banner-head">
+        <span class="ytd-title" style="color:var(--blue)">📆 SEMAINE <span id="ytw-week-label">—</span> — <span id="ytw-dates-label">—</span></span>
+        <span class="ytd-note">Même numéro de semaine pour chaque année</span>
+      </div>
+      <div class="ytd-grid" id="ytw-grid"><!-- filled by JS --></div>
+    </div>
+
     <!-- Chart -->
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-head">
@@ -1600,6 +1609,7 @@ function renderCyclingTab() {
   renderCyclingChart(ridesA,ridesB,labelA,labelB);
   renderCyclingTable();
   renderYTD();
+  renderYTW();
   renderCyclingList('cycling-a-list','cy-a-badge',ridesA);
   renderCyclingList('cycling-b-list','cy-b-badge',ridesB);
 }
@@ -1769,6 +1779,67 @@ function renderYTD() {
           <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${fmtTime(time)}</span></div>
           <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${Math.round(elev).toLocaleString()} m</span></div>
           ${speed ? `<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${speed.toFixed(1)} km/h</span></div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderYTW() {
+  const now        = new Date();
+  const currentWk  = getISOWeek(now);
+  const years      = getAvailableYears();
+  const colors     = ['var(--orange)','var(--blue)','var(--green)','var(--purple)','#facc15','#f472b6'];
+  const fmtShort   = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+
+  // Label: current week number + date range (in current year)
+  const { start: ws, end: we } = getWeekStartEnd(now.getFullYear(), currentWk);
+  document.getElementById('ytw-week-label').textContent  = currentWk;
+  document.getElementById('ytw-dates-label').textContent = `${fmtShort(ws)} – ${fmtShort(we)}`.toUpperCase();
+
+  const grid = document.getElementById('ytw-grid');
+  grid.innerHTML = years.map((year, idx) => {
+    // Cutoff = end of the same ISO week number in `year`
+    const { end: weekEnd } = getWeekStartEnd(year, currentWk);
+    const cutoff = new Date(weekEnd);
+    cutoff.setHours(23, 59, 59);
+
+    // Cumul from Jan 1 of `year` up to end of that week
+    const cumRides = allActivities.filter(a => {
+      if (!isBikeActivity(a)) return false;
+      const d = new Date(a.start_date);
+      return d.getFullYear() === year && d <= cutoff;
+    });
+
+    // Rides only in that specific week (for the "cette semaine" sub-detail)
+    const { start: weekStart } = getWeekStartEnd(year, currentWk);
+    const weekOnly = cumRides.filter(a => new Date(a.start_date) >= weekStart);
+
+    const dist  = cumRides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    const time  = cumRides.reduce((s,a) => s + (a.moving_time||0), 0);
+    const elev  = cumRides.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
+    const rides = cumRides.length;
+    const wsArr = cumRides.filter(a => a.average_speed);
+    const speed = wsArr.length ? wsArr.reduce((s,a) => s + a.average_speed*3.6, 0) / wsArr.length : 0;
+
+    // Week-only stats for the sub-line
+    const wDist = weekOnly.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+
+    const color      = colors[idx % colors.length];
+    const isSelected = year === selectedYearA || year === selectedYearB;
+    const weekRange  = `${fmtShort(weekStart)} – ${fmtShort(weekEnd)}`;
+
+    return `
+      <div class="ytd-year-block" style="${isSelected ? 'border-color:'+color+';' : ''}">
+        <div class="ytd-accent-bar" style="background:${color}"></div>
+        <div class="ytd-year-label" style="color:${color}">${year}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.55rem;letter-spacing:0.5px">${weekRange}</div>
+        <div class="ytd-rows">
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${rides || '—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${rides ? dist.toFixed(0)+' km' : '—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${rides ? fmtTime(time) : '—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${rides ? Math.round(elev).toLocaleString()+' m' : '—'}</span></div>
+          ${speed ? `<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${speed.toFixed(1)} km/h</span></div>` : ''}
+          ${weekOnly.length ? `<div class="ytd-row" style="margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border)"><span class="ytd-row-label" style="font-style:italic">dont S${currentWk}</span><span class="ytd-row-val" style="color:${color}">${weekOnly.length} sortie${weekOnly.length>1?'s':''} · ${wDist.toFixed(0)} km</span></div>` : ''}
         </div>
       </div>`;
   }).join('');
