@@ -856,6 +856,52 @@
   .diff-neg { color: #f87171; font-weight: 700; }
   .diff-neu { color: var(--muted); }
 
+  /* ── PODIUM ── */
+  .podium-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .podium-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem 1.25rem 1.25rem;
+    text-align: center;
+    position: relative;
+    transition: transform .15s;
+    cursor: default;
+    flex: 1;
+    max-width: 240px;
+  }
+
+  .podium-block:hover { transform: translateY(-3px); }
+
+  .podium-block.p1 {
+    border-color: #f59e0b;
+    box-shadow: 0 0 24px rgba(245,158,11,0.15);
+    padding-top: 1.5rem;
+  }
+  .podium-block.p2 { border-color: #9ca3af; }
+  .podium-block.p3 { border-color: #b45309; }
+
+  .podium-medal { font-size: 2rem; line-height: 1; margin-bottom: 0.4rem; }
+  .podium-dist  { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:2px; line-height:1; }
+  .podium-name  { font-size:0.8rem; font-weight:600; margin: 0.35rem 0 0.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .podium-meta  { font-size:0.7rem; color:var(--muted); }
+  .podium-rank  { position:absolute; top:0.6rem; right:0.8rem; font-size:0.65rem; color:var(--muted); letter-spacing:1px; }
+
+  .rank-row-top td { background: rgba(245,158,11,0.06); }
+  .rank-num { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:var(--muted); text-align:center; }
+  .rank-num.gold   { color:#f59e0b; }
+  .rank-num.silver { color:#9ca3af; }
+  .rank-num.bronze { color:#b45309; }
+  .rank-bar-wrap { display:flex; align-items:center; gap:0.5rem; }
+  .rank-bar { height:4px; border-radius:2px; background:var(--orange); flex-shrink:0; transition:width .3s; }
+
   /* ── YEAR SELECTOR (legacy kept for compat) ── */
   .year-selector-bar {
     display: flex;
@@ -1175,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 18:22</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 19:05</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1185,7 +1231,8 @@
 
   <nav class="dash-nav">
     <button class="nav-tab active" onclick="switchTab('overview',this)">📊 Vue générale</button>
-    <button class="nav-tab" onclick="switchTab('cycling',this)">🚴 Comparaison Sorties Par Année</button>
+    <button class="nav-tab" onclick="switchTab('cycling',this)">🚴 Comparaison Vélo Par Année</button>
+    <button class="nav-tab" onclick="switchTab('bikerank',this)">🏆 Sorties Vélo</button>
   </nav>
 
   <!-- TAB: OVERVIEW -->
@@ -1433,6 +1480,56 @@
   </main>
   </div><!-- end tab-cycling -->
 
+  <!-- TAB: BIKE RANKING -->
+  <div id="tab-bikerank" class="tab-page">
+  <main class="dash-main">
+
+    <div class="period-bar" style="margin-bottom:1.5rem">
+      <div class="period-label">🏆 SORTIES VÉLO — PAR DISTANCE</div>
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+        <select id="bikerank-year-filter" onchange="renderBikeRankTab()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.3rem 0.75rem;font-size:0.8rem;font-family:'DM Sans',sans-serif;cursor:pointer">
+          <option value="all">Toutes années</option>
+        </select>
+        <select id="bikerank-type-filter" onchange="renderBikeRankTab()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.3rem 0.75rem;font-size:0.8rem;font-family:'DM Sans',sans-serif;cursor:pointer">
+          <option value="all">Tous types vélo</option>
+          <option value="Ride">🚴 Route</option>
+          <option value="VirtualRide">🖥️ Virtual</option>
+          <option value="GravelRide">🪨 Gravel</option>
+          <option value="MountainBikeRide">🏔️ VTT</option>
+          <option value="EBikeRide">⚡ E-Bike</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Top 3 podium -->
+    <div id="bikerank-podium" class="podium-wrap" style="margin-bottom:1.5rem"></div>
+
+    <!-- Full table -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">TOUTES LES SORTIES VÉLO</span>
+        <span class="card-badge" id="bikerank-badge">—</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rides-table">
+          <thead><tr>
+            <th style="width:2.5rem;text-align:center">#</th>
+            <th>Sortie</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th style="text-align:right">Distance</th>
+            <th style="text-align:right">Temps</th>
+            <th style="text-align:right">Vitesse</th>
+            <th style="text-align:right">Dénivelé</th>
+          </tr></thead>
+          <tbody id="bikerank-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+  </div><!-- end tab-bikerank -->
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -1453,7 +1550,158 @@ function switchTab(tab, btn) {
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
-  if (tab === 'cycling') initCyclingTab();
+  if (tab === 'cycling')  initCyclingTab();
+  if (tab === 'ranking')  initRankingTab();
+  if (tab === 'bikerank') initBikeRankTab();
+}
+
+function initBikeRankTab() {
+  const years = [...new Set(allActivities.filter(isBikeActivity).map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a);
+  const sel = document.getElementById('bikerank-year-filter');
+  while (sel.options.length > 1) sel.remove(1);
+  years.forEach(y => { const o = document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); });
+  renderBikeRankTab();
+}
+
+function initRankingTab() {
+  // Populate year filter
+  const years = [...new Set(allActivities.map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a);
+  const sel = document.getElementById('rank-year-filter');
+  // Keep "Toutes années" option, rebuild the rest
+  while (sel.options.length > 1) sel.remove(1);
+  years.forEach(y => { const o = document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); });
+  renderRankingTab();
+}
+
+function renderRankingTab() {
+  const typeFilter = document.getElementById('rank-type-filter').value;
+  const yearFilter = document.getElementById('rank-year-filter').value;
+
+  const typeMatch = a => {
+    if (typeFilter === 'all')  return true;
+    if (typeFilter === 'bike') return isBikeActivity(a);
+    if (typeFilter === 'run')  return ['Run','TrailRun','VirtualRun'].includes(a.type);
+    if (typeFilter === 'hike') return ['Hike','Walk'].includes(a.type);
+    if (typeFilter === 'swim') return a.type === 'Swim';
+    return true;
+  };
+
+  const sorted = allActivities
+    .filter(a => a.distance > 0 && typeMatch(a) && (yearFilter==='all' || new Date(a.start_date).getFullYear() == yearFilter))
+    .sort((a,b) => b.distance - a.distance);
+
+  document.getElementById('rank-badge').textContent = `${sorted.length} SORTIES`;
+
+  // Podium top 3
+  const medals = ['🥇','🥈','🥉'];
+  const pClasses = ['p1','p2','p3'];
+  const podium = document.getElementById('podium-wrap');
+  podium.innerHTML = sorted.slice(0,3).map((a,i) => {
+    const dist  = (a.distance/1000).toFixed(1);
+    const speed = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '';
+    const date  = new Date(a.start_date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    const stravaUrl = `https://www.strava.com/activities/${a.id}`;
+    return `
+      <div class="podium-block ${pClasses[i]}" onclick="window.open('${stravaUrl}','_blank')">
+        <span class="podium-rank">${a.type}</span>
+        <div class="podium-medal">${medals[i]}</div>
+        <div class="podium-dist" style="color:${i===0?'#f59e0b':i===1?'#9ca3af':'#b45309'}">${dist} <span style="font-size:1rem">km</span></div>
+        <div class="podium-name">${a.name}</div>
+        <div class="podium-meta">${date}${speed?' · '+speed:''}</div>
+      </div>`;
+  }).join('');
+
+  // Full table
+  const maxDist = sorted[0]?.distance || 1;
+  document.getElementById('rank-table-body').innerHTML = sorted.map((a,i) => {
+    const dist   = (a.distance/1000).toFixed(1);
+    const speed  = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '—';
+    const elev   = a.total_elevation_gain ? Math.round(a.total_elevation_gain).toLocaleString()+' m' : '—';
+    const date   = new Date(a.start_date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const barW   = Math.round((a.distance/maxDist)*120);
+    const numCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const barColor = isBikeActivity(a)?'var(--orange)':['Run','TrailRun','VirtualRun'].includes(a.type)?'var(--green)':'var(--blue)';
+    const stravaUrl = `https://www.strava.com/activities/${a.id}`;
+    return `<tr class="${i<3?'rank-row-top':''}">
+      <td class="rank-num ${numCls}">${i+1}</td>
+      <td><div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:${barW}px;background:${barColor}"></div>
+        <a class="act-strava-link" href="${stravaUrl}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:600">${a.name}</a>
+      </div></td>
+      <td style="font-size:0.78rem;color:var(--muted)">${date}</td>
+      <td style="font-size:0.75rem;color:var(--muted)">${a.type}</td>
+      <td style="text-align:right;font-weight:700;color:${barColor}">${dist} km</td>
+      <td style="text-align:right;font-size:0.8rem">${fmtTime(a.moving_time)}</td>
+      <td style="text-align:right;font-size:0.8rem">${speed}</td>
+      <td style="text-align:right;font-size:0.8rem">${elev}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══════════════════════════════
+   BIKE RANKING TAB
+══════════════════════════════ */
+function renderBikeRankTab() {
+  const yearFilter = document.getElementById('bikerank-year-filter').value;
+  const typeFilter = document.getElementById('bikerank-type-filter').value;
+
+  const sorted = allActivities
+    .filter(a => {
+      if (!isBikeActivity(a)) return false;
+      if (a.distance <= 0) return false;
+      if (yearFilter !== 'all' && new Date(a.start_date).getFullYear() != yearFilter) return false;
+      if (typeFilter !== 'all' && a.type !== typeFilter) return false;
+      return true;
+    })
+    .sort((a,b) => b.distance - a.distance);
+
+  document.getElementById('bikerank-badge').textContent = `${sorted.length} SORTIES`;
+
+  // Podium top 3
+  const medals  = ['🥇','🥈','🥉'];
+  const pColors = ['#f59e0b','#9ca3af','#b45309'];
+  const pClass  = ['p1','p2','p3'];
+  document.getElementById('bikerank-podium').innerHTML = sorted.slice(0,3).map((a,i) => {
+    const dist = (a.distance/1000).toFixed(1);
+    const speed = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '';
+    const date  = new Date(a.start_date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    const url   = `https://www.strava.com/activities/${a.id}`;
+    const emoji = a.type==='VirtualRide'?'🖥️':a.type==='GravelRide'?'🪨':a.type==='MountainBikeRide'?'🏔️':a.type==='EBikeRide'?'⚡':'🚴';
+    return `
+      <div class="podium-block ${pClass[i]}" onclick="window.open('${url}','_blank')" style="cursor:pointer">
+        <span class="podium-rank">${emoji} ${a.type}</span>
+        <div class="podium-medal">${medals[i]}</div>
+        <div class="podium-dist" style="color:${pColors[i]}">${dist} <span style="font-size:1rem">km</span></div>
+        <div class="podium-name">${a.name}</div>
+        <div class="podium-meta">${date}${speed?' · '+speed:''}</div>
+      </div>`;
+  }).join('');
+
+  // Full table
+  const maxDist = sorted[0]?.distance || 1;
+  document.getElementById('bikerank-body').innerHTML = sorted.map((a,i) => {
+    const dist   = (a.distance/1000).toFixed(1);
+    const speed  = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '—';
+    const elev   = a.total_elevation_gain ? Math.round(a.total_elevation_gain).toLocaleString()+' m' : '—';
+    const date   = new Date(a.start_date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const barW   = Math.round((a.distance/maxDist)*120);
+    const numCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const emoji  = a.type==='VirtualRide'?'🖥️':a.type==='GravelRide'?'🪨':a.type==='MountainBikeRide'?'🏔️':a.type==='EBikeRide'?'⚡':'🚴';
+    const url    = `https://www.strava.com/activities/${a.id}`;
+    return `<tr class="${i<3?'rank-row-top':''}">
+      <td class="rank-num ${numCls}">${i+1}</td>
+      <td><div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:${barW}px;background:var(--orange)"></div>
+        <a class="act-strava-link" href="${url}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:600">${a.name}</a>
+      </div></td>
+      <td style="font-size:0.78rem;color:var(--muted)">${date}</td>
+      <td style="font-size:0.75rem">${emoji} ${a.type}</td>
+      <td style="text-align:right;font-weight:700;color:var(--orange)">${dist} km</td>
+      <td style="text-align:right;font-size:0.8rem">${fmtTime(a.moving_time)}</td>
+      <td style="text-align:right;font-size:0.8rem">${speed}</td>
+      <td style="text-align:right;font-size:0.8rem">${elev}</td>
+    </tr>`;
+  }).join('');
 }
 
 /* ══════════════════════════════
