@@ -1165,7 +1165,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 17:52</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 18:05</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1935,6 +1935,13 @@ function renderCumulChart() {
           callbacks: {
             title: items => `${items[0].label}`,
             label: c => c.raw !== null ? `${c.dataset.label} : ${c.raw} km cumulés` : null,
+            afterBody: items => {
+              const vals = items.filter(i => i.raw !== null).map(i => i.raw);
+              if (vals.length < 2) return [];
+              const ecart = vals[0] - vals[1];
+              const sign  = ecart >= 0 ? '+' : '';
+              return [`────────────────`, `Écart : ${sign}${ecart.toFixed(0)} km`];
+            }
           }
         }
       },
