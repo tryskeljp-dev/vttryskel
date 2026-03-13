@@ -1369,6 +1369,18 @@
       </div>
     </div>
 
+    <!-- Cumulative km chart -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title">📈 CUMUL KM — JOUR PAR JOUR</span>
+        <span class="card-badge" id="cumul-badge">DEPUIS LE 1er JANVIER</span>
+      </div>
+      <div class="card-body">
+        <div style="position:relative;height:260px"><canvas id="cumulChart"></canvas></div>
+        <p style="font-size:0.7rem;color:var(--muted);margin-top:0.6rem;text-align:center">Distance cumulée depuis le 1er janvier · chaque point = une journée · les mois futurs sont vides</p>
+      </div>
+    </div>
+
     <!-- Detail table -->
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-head">
@@ -1650,6 +1662,7 @@ function renderCyclingTab() {
 
   renderCyclingChart(ridesA,ridesB,labelA,labelB);
   renderCyclingTable();
+  renderCumulChart();
   renderYTD();
   renderYTW();
   renderCyclingList('cycling-a-list','cy-a-badge',ridesA,'var(--orange)');
@@ -1824,6 +1837,126 @@ function renderCyclingTable() {
       </div></td>
     </tr>`;
   }).join('');
+}
+
+let cumulChartInstance = null;
+
+function renderCumulChart() {
+  const ctx = document.getElementById('cumulChart').getContext('2d');
+  if (cumulChartInstance) { cumulChartInstance.destroy(); cumulChartInstance = null; }
+
+  const now    = new Date();
+  const colors = { [selectedYearA]: { line:'#FC4C02', fill:'rgba(252,76,2,0.08)' },
+                   [selectedYearB]: { line:'#60a5fa', fill:'rgba(96,165,250,0.08)' } };
+
+  // Build 365 labels as "JJ/MM" using year A as reference for day names
+  const isLeap = y => (y%4===0&&y%100!==0)||y%400===0;
+  const daysInYear = isLeap(selectedYearA) ? 366 : 365;
+
+  const labels = [];
+  for (let d=0; d<daysInYear; d++) {
+    const date = new Date(selectedYearA, 0, 1 + d);
+    labels.push(date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}));
+  }
+
+  // For each year: build daily cumulative km array (length = daysInYear)
+  const buildCumul = (year) => {
+    // Map each day-of-year index → total km on that day
+    const dailyKm = new Array(daysInYear).fill(0);
+    const yearStart = new Date(year, 0, 1);
+
+    allActivities.forEach(a => {
+      if (!isBikeActivity(a)) return;
+      const d = new Date(a.start_date);
+      if (d.getFullYear() !== year) return;
+      const dayIdx = Math.floor((d - yearStart) / 86400000);
+      if (dayIdx >= 0 && dayIdx < daysInYear) {
+        dailyKm[dayIdx] += (a.distance || 0) / 1000;
+      }
+    });
+
+    // Cumulative sum; for the current year, stop at today's day index
+    const todayIdx = year === now.getFullYear()
+      ? Math.floor((now - new Date(year,0,1)) / 86400000)
+      : daysInYear - 1;
+
+    const cumul = [];
+    let running = 0;
+    for (let i = 0; i < daysInYear; i++) {
+      if (i > todayIdx && year === now.getFullYear()) {
+        cumul.push(null); // future days = null (not drawn)
+      } else {
+        running += dailyKm[i];
+        cumul.push(Math.round(running * 10) / 10);
+      }
+    }
+    return cumul;
+  };
+
+  const years = [selectedYearA, selectedYearB].filter((y,i,a)=>y&&a.indexOf(y)===i);
+  const datasets = years.map(year => ({
+    label: String(year),
+    data: buildCumul(year),
+    borderColor: colors[year]?.line || '#FC4C02',
+    backgroundColor: colors[year]?.fill || 'transparent',
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    tension: 0.3,
+    fill: false,
+    spanGaps: false,
+  }));
+
+  // X-axis: only show 1st of each month
+  const monthTicks = [];
+  for (let m=0; m<12; m++) {
+    const d = new Date(selectedYearA, m, 1);
+    const idx = Math.floor((d - new Date(selectedYearA,0,1)) / 86400000);
+    if (idx < daysInYear) monthTicks.push(idx);
+  }
+
+  cumulChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color:'rgba(240,236,230,0.65)', font:{size:11}, boxWidth:20, boxHeight:2, usePointStyle:false }
+        },
+        tooltip: {
+          backgroundColor: '#1e1e1e',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#f0ece6',
+          callbacks: {
+            title: items => `${items[0].label}`,
+            label: c => c.raw !== null ? `${c.dataset.label} : ${c.raw} km cumulés` : null,
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color:'rgba(255,255,255,0.03)' },
+          ticks: {
+            color: 'rgba(240,236,230,0.35)',
+            font: { size:9 },
+            maxRotation: 0,
+            callback: (val, idx) => monthTicks.includes(idx)
+              ? new Date(selectedYearA,0,1+idx).toLocaleDateString('fr-FR',{month:'short'}).toUpperCase()
+              : undefined,
+          }
+        },
+        y: {
+          grid: { color:'rgba(255,255,255,0.04)' },
+          ticks: { color:'rgba(240,236,230,0.4)', font:{size:10}, callback: v => v+' km' }
+        }
+      }
+    }
+  });
 }
 
 function renderYTD() {
