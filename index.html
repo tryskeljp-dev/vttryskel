@@ -281,6 +281,21 @@
   }
 
   .logo-text span { color: var(--orange); }
+  .version-badge {
+    font-size: 0.55rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    vertical-align: middle;
+    margin-left: 0.3rem;
+    position: relative;
+    top: -2px;
+  }
 
   .header-athlete {
     display: flex;
@@ -1150,7 +1165,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 16:34</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
