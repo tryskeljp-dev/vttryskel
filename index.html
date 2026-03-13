@@ -846,6 +846,16 @@
     width: 4px; height: 100%;
   }
 
+  .ytd-diff-block {
+    border-color: rgba(255,255,255,0.12) !important;
+    background: rgba(255,255,255,0.03);
+    order: -1;
+  }
+
+  .diff-pos { color: #4ade80; font-weight: 700; }
+  .diff-neg { color: #f87171; font-weight: 700; }
+  .diff-neu { color: var(--muted); }
+
   /* ── YEAR SELECTOR (legacy kept for compat) ── */
   .year-selector-bar {
     display: flex;
@@ -1165,7 +1175,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 18:05</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 18:22</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1968,46 +1978,93 @@ function renderCumulChart() {
 
 function renderYTD() {
   const now    = new Date();
-  const years  = [selectedYearA, selectedYearB].filter((y,i,a) => y && a.indexOf(y)===i);
   const colors = { [selectedYearA]: 'var(--orange)', [selectedYearB]: 'var(--blue)' };
 
   const dateLabel = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
   document.getElementById('ytd-date-label').textContent = dateLabel.toUpperCase();
 
-  const grid = document.getElementById('ytd-grid');
-  grid.innerHTML = years.map(year => {
+  // Compute stats for both years
+  const getStats = year => {
     const cutoff = new Date(year, now.getMonth(), now.getDate(), 23, 59, 59);
-    const yearRides = allActivities.filter(a => {
+    const rides = allActivities.filter(a => {
       if (!isBikeActivity(a)) return false;
       const d = new Date(a.start_date);
       return d.getFullYear() === year && d <= cutoff;
     });
-    const dist  = yearRides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
-    const time  = yearRides.reduce((s,a) => s + (a.moving_time||0), 0);
-    const elev  = yearRides.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
-    const rides = yearRides.length;
-    const wsArr = yearRides.filter(a => a.average_speed);
+    const dist  = rides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    const time  = rides.reduce((s,a) => s + (a.moving_time||0), 0);
+    const elev  = rides.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
+    const wsArr = rides.filter(a => a.average_speed);
     const speed = wsArr.length ? wsArr.reduce((s,a) => s + a.average_speed*3.6, 0) / wsArr.length : 0;
+    return { rides: rides.length, dist, time, elev, speed };
+  };
+
+  const sA = getStats(selectedYearA);
+  const sB = getStats(selectedYearB);
+
+  const diffBlock = selectedYearA !== selectedYearB ? diffBlockHTML(sA, sB) : '';
+
+  const yearBlock = (year, s) => {
     const color = colors[year] || 'var(--orange)';
     return `
       <div class="ytd-year-block" style="border-color:${color}">
         <div class="ytd-accent-bar" style="background:${color}"></div>
         <div class="ytd-year-label" style="color:${color}">${year}</div>
         <div class="ytd-rows">
-          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${rides}</span></div>
-          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${dist.toFixed(0)} km</span></div>
-          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${fmtTime(time)}</span></div>
-          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${Math.round(elev).toLocaleString()} m</span></div>
-          ${speed ? `<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${speed.toFixed(1)} km/h</span></div>` : ''}
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${s.rides}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${s.dist.toFixed(0)} km</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${fmtTime(s.time)}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${Math.round(s.elev).toLocaleString()} m</span></div>
+          ${s.speed ? `<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${s.speed.toFixed(1)} km/h</span></div>` : ''}
         </div>
       </div>`;
-  }).join('');
+  };
+
+  document.getElementById('ytd-grid').innerHTML =
+    diffBlock + yearBlock(selectedYearA, sA) + yearBlock(selectedYearB, sB);
+}
+
+/* ─── Diff block shared helper ─── */
+function diffBlockHTML(sA, sB, extraA, extraB) {
+  // extraA/extraB = optional {wDist, wRides} for week-only detail
+  const d = (a,b) => {
+    if (!b && !a) return {txt:'—', cls:'neu'};
+    const v = a - b; const s = v>0?'+':''; 
+    return { txt: s+v.toFixed(0), cls: v>0?'pos':v<0?'neg':'neu' };
+  };
+  const dPct = (a,b) => {
+    if (!b) return {txt:'—', cls:'neu'};
+    const p = (a-b)/b*100; const s = p>0?'+':'';
+    return { txt: s+p.toFixed(0)+'%', cls: p>0?'pos':p<0?'neg':'neu' };
+  };
+  const dRides = d(sA.rides, sB.rides);
+  const dDist  = d(sA.dist,  sB.dist);
+  const dElev  = d(sA.elev,  sB.elev);
+  const dSpeed = dPct(sA.speed, sB.speed);
+  const tDiff  = sA.time - sB.time;
+  const tSign  = tDiff >= 0 ? '+' : '-';
+  const tAbs   = Math.abs(tDiff);
+  const tCls   = tDiff > 0 ? 'pos' : tDiff < 0 ? 'neg' : 'neu';
+  const tTxt   = fmtTime(tAbs);
+
+  return `
+    <div class="ytd-year-block ytd-diff-block">
+      <div class="ytd-accent-bar" style="background:linear-gradient(to bottom,var(--orange),var(--blue))"></div>
+      <div class="ytd-year-label" style="color:var(--muted);font-size:0.9rem;letter-spacing:1px">ÉCART</div>
+      <div style="font-size:0.62rem;color:var(--muted);margin-bottom:0.55rem;letter-spacing:0.5px">${selectedYearA} − ${selectedYearB}</div>
+      <div class="ytd-rows">
+        <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val diff-${dRides.cls}">${dRides.txt}</span></div>
+        <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val diff-${dDist.cls}">${dDist.txt} km</span></div>
+        <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val diff-${tCls}">${tSign}${tTxt}</span></div>
+        <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val diff-${dElev.cls}">${dElev.txt} m</span></div>
+        <div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse</span><span class="ytd-row-val diff-${dSpeed.cls}">${dSpeed.txt}</span></div>
+      </div>
+    </div>`;
 }
 
 function renderYTW() {
   const now        = new Date();
   const currentWk  = getISOWeek(now);
-  const years      = [selectedYearA, selectedYearB].filter((y,i,a) => y && a.indexOf(y)===i);
   const colors     = { [selectedYearA]: 'var(--orange)', [selectedYearB]: 'var(--blue)' };
   const fmtShort   = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
 
@@ -2015,43 +2072,49 @@ function renderYTW() {
   document.getElementById('ytw-week-label').textContent  = currentWk;
   document.getElementById('ytw-dates-label').textContent = `${fmtShort(ws)} – ${fmtShort(we)}`.toUpperCase();
 
-  const grid = document.getElementById('ytw-grid');
-  grid.innerHTML = years.map(year => {
+  const getStats = year => {
     const { start: weekStart, end: weekEnd } = getWeekStartEnd(year, currentWk);
     const cutoff = new Date(weekEnd); cutoff.setHours(23,59,59);
-
     const cumRides = allActivities.filter(a => {
       if (!isBikeActivity(a)) return false;
       const d = new Date(a.start_date);
       return d.getFullYear() === year && d <= cutoff;
     });
     const weekOnly = cumRides.filter(a => new Date(a.start_date) >= weekStart);
-
     const dist  = cumRides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
     const time  = cumRides.reduce((s,a) => s + (a.moving_time||0), 0);
     const elev  = cumRides.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
-    const rides = cumRides.length;
     const wsArr = cumRides.filter(a => a.average_speed);
     const speed = wsArr.length ? wsArr.reduce((s,a) => s + a.average_speed*3.6, 0) / wsArr.length : 0;
     const wDist = weekOnly.reduce((s,a) => s + (a.distance||0), 0) / 1000;
-    const color = colors[year] || 'var(--blue)';
-    const weekRange = `${fmtShort(weekStart)} – ${fmtShort(weekEnd)}`;
+    return { rides: cumRides.length, dist, time, elev, speed, weekOnly, wDist, weekStart, weekEnd };
+  };
 
+  const sA = getStats(selectedYearA);
+  const sB = getStats(selectedYearB);
+
+  const yearBlock = (year, s) => {
+    const color = colors[year] || 'var(--orange)';
+    const weekRange = `${fmtShort(s.weekStart)} – ${fmtShort(s.weekEnd)}`;
     return `
       <div class="ytd-year-block" style="border-color:${color}">
         <div class="ytd-accent-bar" style="background:${color}"></div>
         <div class="ytd-year-label" style="color:${color}">${year}</div>
         <div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.55rem;letter-spacing:0.5px">${weekRange}</div>
         <div class="ytd-rows">
-          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${rides||'—'}</span></div>
-          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${rides?dist.toFixed(0)+' km':'—'}</span></div>
-          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${rides?fmtTime(time):'—'}</span></div>
-          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${rides?Math.round(elev).toLocaleString()+' m':'—'}</span></div>
-          ${speed?`<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${speed.toFixed(1)} km/h</span></div>`:''}
-          ${weekOnly.length?`<div class="ytd-row" style="margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border)"><span class="ytd-row-label" style="font-style:italic">dont S${currentWk}</span><span class="ytd-row-val" style="color:${color}">${weekOnly.length} sortie${weekOnly.length>1?'s':''} · ${wDist.toFixed(0)} km</span></div>`:''}
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${s.rides||'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${s.rides?s.dist.toFixed(0)+' km':'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${s.rides?fmtTime(s.time):'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${s.rides?Math.round(s.elev).toLocaleString()+' m':'—'}</span></div>
+          ${s.speed?`<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${s.speed.toFixed(1)} km/h</span></div>`:''}
+          ${s.weekOnly.length?`<div class="ytd-row" style="margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border)"><span class="ytd-row-label" style="font-style:italic">dont S${currentWk}</span><span class="ytd-row-val" style="color:${color}">${s.weekOnly.length} sortie${s.weekOnly.length>1?'s':''} · ${s.wDist.toFixed(0)} km</span></div>`:''}
         </div>
       </div>`;
-  }).join('');
+  };
+
+  const diffBlock = selectedYearA !== selectedYearB ? diffBlockHTML(sA, sB) : '';
+  document.getElementById('ytw-grid').innerHTML =
+    diffBlock + yearBlock(selectedYearA, sA) + yearBlock(selectedYearB, sB);
 }
 
 /* ─── Shared activity item renderer ─── */
