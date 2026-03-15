@@ -1221,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 19:05</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 19:25</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1233,6 +1233,7 @@
     <button class="nav-tab active" onclick="switchTab('overview',this)">📊 Vue générale</button>
     <button class="nav-tab" onclick="switchTab('cycling',this)">🚴 Comparaison Vélo Par Année</button>
     <button class="nav-tab" onclick="switchTab('bikerank',this)">🏆 Sorties Vélo</button>
+    <button class="nav-tab" onclick="switchTab('bestyear',this)">📈 Meilleure Année Glissante</button>
   </nav>
 
   <!-- TAB: OVERVIEW -->
@@ -1530,6 +1531,69 @@
   </main>
   </div><!-- end tab-bikerank -->
 
+  <!-- TAB: BEST ROLLING YEAR -->
+  <div id="tab-bestyear" class="tab-page">
+  <main class="dash-main">
+
+    <div class="period-bar" style="margin-bottom:1.5rem">
+      <div class="period-label">📈 MEILLEURE FENÊTRE DE 365 JOURS — VÉLO</div>
+    </div>
+
+    <!-- Hero best window -->
+    <div id="bestyear-hero" style="margin-bottom:1.5rem"></div>
+
+    <!-- All windows chart -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title">CUMUL KM POUR CHAQUE FENÊTRE DE 365 JOURS</span>
+        <span class="card-badge" id="bestyear-chart-badge">—</span>
+      </div>
+      <div class="card-body">
+        <div style="position:relative;height:280px"><canvas id="bestyearChart"></canvas></div>
+        <p style="font-size:0.7rem;color:var(--muted);margin-top:0.6rem;text-align:center">
+          Chaque point = total km cumulés sur les 365 jours se terminant à cette date · cliquez pour voir les sorties
+        </p>
+      </div>
+    </div>
+
+    <!-- Top 10 windows -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title">TOP 10 MEILLEURES FENÊTRES</span>
+        <span class="card-badge">365 JOURS</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rides-table">
+          <thead><tr>
+            <th style="width:2.5rem;text-align:center">#</th>
+            <th>Période</th>
+            <th style="text-align:right">Distance</th>
+            <th style="text-align:right">Sorties</th>
+            <th style="text-align:right">Dénivelé</th>
+            <th style="text-align:right">Temps</th>
+          </tr></thead>
+          <tbody id="bestyear-top10"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Drill panel for best year -->
+    <div id="bestyear-drill" style="display:none;margin-bottom:2rem">
+      <div class="card">
+        <div class="card-head" style="justify-content:space-between">
+          <span class="card-title" id="bestyear-drill-title">SORTIES</span>
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <span class="card-badge" id="bestyear-drill-badge">—</span>
+            <button onclick="document.getElementById('bestyear-drill').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.75rem;font-family:'DM Sans',sans-serif">✕ Fermer</button>
+          </div>
+        </div>
+        <div class="activity-list" id="bestyear-drill-list"></div>
+      </div>
+    </div>
+
+  </main>
+  </div><!-- end tab-bestyear -->
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -1553,6 +1617,7 @@ function switchTab(tab, btn) {
   if (tab === 'cycling')  initCyclingTab();
   if (tab === 'ranking')  initRankingTab();
   if (tab === 'bikerank') initBikeRankTab();
+  if (tab === 'bestyear') initBestYearTab();
 }
 
 function initBikeRankTab() {
@@ -1702,6 +1767,202 @@ function renderBikeRankTab() {
       <td style="text-align:right;font-size:0.8rem">${elev}</td>
     </tr>`;
   }).join('');
+}
+
+/* ══════════════════════════════
+   BEST ROLLING YEAR TAB
+══════════════════════════════ */
+let bestYearChartInstance = null;
+
+function initBestYearTab() {
+  renderBestYearTab();
+}
+
+function renderBestYearTab() {
+  // Build sorted list of bike rides with date + km
+  const rides = allActivities
+    .filter(a => isBikeActivity(a) && a.distance > 0)
+    .map(a => ({ date: new Date(a.start_date), km: a.distance / 1000, raw: a }))
+    .sort((a,b) => a.date - b.date);
+
+  if (!rides.length) {
+    document.getElementById('bestyear-hero').innerHTML =
+      `<div class="card" style="text-align:center;padding:2rem;color:var(--muted)">Aucune donnée vélo disponible.</div>`;
+    return;
+  }
+
+  const msDay = 86400000;
+  const window365 = 365 * msDay;
+
+  // For every day that has at least one ride as end-date, compute the 365-day window ending that day
+  // Build daily buckets
+  const minDate = rides[0].date;
+  const maxDate = rides[rides.length - 1].date;
+
+  // Compute rolling sum using two-pointer
+  // We'll compute for each unique end-date (each ride date)
+  const windows = [];
+  let left = 0;
+  let runningKm = 0;
+  let runningRides = 0;
+  let runningElev = 0;
+  let runningTime = 0;
+
+  for (let right = 0; right < rides.length; right++) {
+    runningKm    += rides[right].km;
+    runningRides += 1;
+    runningElev  += rides[right].raw.total_elevation_gain || 0;
+    runningTime  += rides[right].raw.moving_time || 0;
+
+    // Remove rides outside the 365-day window
+    while (rides[right].date - rides[left].date >= window365) {
+      runningKm    -= rides[left].km;
+      runningRides -= 1;
+      runningElev  -= rides[left].raw.total_elevation_gain || 0;
+      runningTime  -= rides[left].raw.moving_time || 0;
+      left++;
+    }
+
+    windows.push({
+      endDate:   rides[right].date,
+      startDate: new Date(rides[right].date - window365 + msDay),
+      km:        runningKm,
+      rides:     runningRides,
+      elev:      runningElev,
+      time:      runningTime,
+      leftIdx:   left,
+      rightIdx:  right,
+    });
+  }
+
+  // Find best window
+  const best = windows.reduce((a,b) => b.km > a.km ? b : a);
+  const fmt  = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+  const fmtShort = d => d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+
+  // Hero block
+  document.getElementById('bestyear-hero').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem">
+      <div class="ytd-year-block" style="border-color:var(--orange);grid-column:1/-1;background:rgba(252,76,2,0.07)">
+        <div class="ytd-accent-bar" style="background:var(--orange)"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.4rem">🏆 MEILLEURE FENÊTRE</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.8rem;color:var(--orange);line-height:1">${best.km.toFixed(0)} <span style="font-size:1.2rem">km</span></div>
+        <div style="font-size:0.75rem;color:var(--muted);margin:0.3rem 0 0.8rem">${fmt(best.startDate)} → ${fmt(best.endDate)}</div>
+        <div class="ytd-rows">
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${best.rides}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${fmtTime(best.time)}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${Math.round(best.elev).toLocaleString()} m</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📅 Moy./semaine</span><span class="ytd-row-val">${(best.km/52).toFixed(0)} km</span></div>
+        </div>
+      </div>
+    </div>`;
+
+  // Chart: all windows by end date
+  const ctx = document.getElementById('bestyearChart').getContext('2d');
+  if (bestYearChartInstance) { bestYearChartInstance.destroy(); bestYearChartInstance = null; }
+
+  const chartLabels = windows.map(w => fmtShort(w.endDate));
+  const chartData   = windows.map(w => Math.round(w.km));
+  const bestKm      = best.km;
+
+  document.getElementById('bestyear-chart-badge').textContent = `${windows.length} FENÊTRES`;
+
+  bestYearChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: 'Cumul 365 jours (km)',
+        data: chartData,
+        borderColor: '#FC4C02',
+        backgroundColor: ctx => {
+          const gradient = ctx.chart.ctx.createLinearGradient(0,0,0,280);
+          gradient.addColorStop(0, 'rgba(252,76,2,0.25)');
+          gradient.addColorStop(1, 'rgba(252,76,2,0.01)');
+          return gradient;
+        },
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#FC4C02',
+        tension: 0.4,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e1e1e',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#f0ece6',
+          callbacks: {
+            title: items => `Fenêtre se terminant le ${windows[items[0].dataIndex].endDate.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}`,
+            label: c => `${c.raw} km cumulés sur 365 jours`,
+            afterLabel: c => {
+              const w = windows[c.dataIndex];
+              return [`Du ${fmt(w.startDate)} au ${fmt(w.endDate)}`, `${w.rides} sorties · ${fmtTime(w.time)}`];
+            }
+          }
+        },
+        annotation: {}
+      },
+      scales: {
+        x: {
+          grid: { color:'rgba(255,255,255,0.03)' },
+          ticks: { color:'rgba(240,236,230,0.35)', font:{size:9}, maxTicksLimit:18, maxRotation:0 }
+        },
+        y: {
+          grid: { color:'rgba(255,255,255,0.04)' },
+          ticks: { color:'rgba(240,236,230,0.4)', font:{size:10}, callback: v => v+' km' }
+        }
+      },
+      onClick: (evt, elements) => {
+        if (!elements.length) return;
+        const w = windows[elements[0].index];
+        const wRides = rides.slice(w.leftIdx, w.rightIdx + 1).map(r => r.raw);
+        openBestYearDrill(
+          `Fenêtre · ${fmt(w.startDate)} → ${fmt(w.endDate)}`,
+          wRides
+        );
+      }
+    }
+  });
+
+  // Top 10 table
+  const top10 = [...windows].sort((a,b) => b.km - a.km).slice(0, 10);
+  const maxKm = top10[0].km;
+  document.getElementById('bestyear-top10').innerHTML = top10.map((w, i) => {
+    const numCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const barW   = Math.round((w.km / maxKm) * 120);
+    return `<tr class="${i<3?'rank-row-top':''}">
+      <td class="rank-num ${numCls}">${i+1}</td>
+      <td>
+        <div class="rank-bar-wrap">
+          <div class="rank-bar" style="width:${barW}px;background:var(--orange)"></div>
+          <span style="font-size:0.8rem">${fmtShort(w.startDate)} → ${fmtShort(w.endDate)}</span>
+        </div>
+      </td>
+      <td style="text-align:right;font-weight:700;color:var(--orange)">${w.km.toFixed(0)} km</td>
+      <td style="text-align:right;font-size:0.8rem">${w.rides}</td>
+      <td style="text-align:right;font-size:0.8rem">${Math.round(w.elev).toLocaleString()} m</td>
+      <td style="text-align:right;font-size:0.8rem">${fmtTime(w.time)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openBestYearDrill(title, rideList) {
+  const sorted = [...rideList].sort((a,b) => new Date(b.start_date) - new Date(a.start_date));
+  document.getElementById('bestyear-drill-title').textContent = title.toUpperCase();
+  document.getElementById('bestyear-drill-badge').textContent = `${sorted.length} SORTIES`;
+  document.getElementById('bestyear-drill-list').innerHTML = sorted.map(a => actItemHTML(a, 'var(--orange)')).join('');
+  const panel = document.getElementById('bestyear-drill');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
 /* ══════════════════════════════
