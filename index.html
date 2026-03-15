@@ -1221,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 13/03/2026 19:25</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 15/03/2026 10:05</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1838,7 +1838,7 @@ function renderBestYearTab() {
   // Find best window
   const best = windows.reduce((a,b) => b.km > a.km ? b : a);
   const fmt  = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
-  const fmtShort = d => d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+  const fmtShort = d => d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
 
   // Hero block
   document.getElementById('bestyear-hero').innerHTML = `
