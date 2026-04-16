@@ -4,502 +4,298 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AutoremCal — Google Agenda</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #F7F6F3;
-    --surface: #FFFFFF;
-    --border: #E5E3DC;
-    --border-strong: #C8C5BB;
-    --text: #1A1917;
-    --text-muted: #706D65;
-    --text-faint: #A9A69F;
-    --blue: #4285F4;
-    --blue-light: #EBF2FF;
-    --today-bg: #EBF2FF;
-    --radius: 6px;
-    --radius-lg: 10px;
+    --black: #0A0A0A;
+    --white: #FFFEF5;
+    --yellow: #FFE234;
+    --red: #E8272A;
+    --blue: #1A56DB;
+    --bd: 3px solid #0A0A0A;
+    --bd-thick: 4px solid #0A0A0A;
+    --sh: 4px 4px 0 #0A0A0A;
+    --sh-lg: 6px 6px 0 #0A0A0A;
   }
 
   body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family: 'Comic Neue', cursive;
+    background: var(--white);
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(0,0,0,0.04) 28px, rgba(0,0,0,0.04) 29px),
+      repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(0,0,0,0.04) 28px, rgba(0,0,0,0.04) 29px);
+    color: var(--black);
     min-height: 100vh;
     font-size: 14px;
   }
 
-  /* ── HEADER ── */
   .app-header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    background: var(--yellow);
+    border-bottom: var(--bd-thick);
     padding: 0 24px;
-    height: 56px;
+    height: 64px;
     display: flex;
     align-items: center;
     gap: 16px;
     position: sticky;
     top: 0;
     z-index: 100;
+    box-shadow: 0 4px 0 var(--black);
   }
 
   .logo {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    color: var(--text);
+    font-family: 'Bangers', cursive;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--black);
     display: flex;
     align-items: center;
     gap: 8px;
+    text-shadow: 2px 2px 0 var(--red);
   }
 
   .logo-dot {
-    width: 10px;
-    height: 10px;
+    width: 12px; height: 12px;
     border-radius: 50%;
-    background: var(--blue);
+    background: var(--red);
+    border: 2px solid var(--black);
+    box-shadow: 2px 2px 0 var(--black);
   }
 
-  .nav-controls {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: 8px;
-  }
+  .nav-controls { display: flex; align-items: center; gap: 6px; margin-left: 8px; }
 
   .nav-btn {
-    border: 1px solid var(--border);
-    background: transparent;
-    border-radius: var(--radius);
-    width: 30px;
-    height: 30px;
+    border: var(--bd);
+    background: var(--white);
+    width: 34px; height: 34px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    color: var(--text-muted);
-    transition: all 0.12s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900;
+    color: var(--black);
+    box-shadow: var(--sh);
+    transition: all 0.08s;
   }
-
-  .nav-btn:hover { background: var(--bg); border-color: var(--border-strong); color: var(--text); }
+  .nav-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); background: var(--red); color: #fff; }
+  .nav-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--black); }
 
   .week-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-    min-width: 140px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.3px;
+    font-family: 'Bangers', cursive;
+    font-size: 18px; letter-spacing: 1px;
+    color: var(--black); min-width: 160px; padding: 0 6px;
   }
 
   .today-btn {
-    border: 1px solid var(--border);
-    background: transparent;
-    border-radius: var(--radius);
-    padding: 5px 12px;
-    cursor: pointer;
-    font-size: 12px;
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text-muted);
-    transition: all 0.12s;
+    border: var(--bd); background: var(--white);
+    padding: 6px 14px; cursor: pointer;
+    font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 13px;
+    color: var(--black); box-shadow: var(--sh); transition: all 0.08s;
+    text-transform: uppercase; letter-spacing: 0.5px;
   }
+  .today-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); background: var(--blue); color: #fff; }
 
-  .today-btn:hover { background: var(--bg); color: var(--text); }
-
-  .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 
   .user-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--white); border: var(--bd);
     padding: 4px 12px 4px 4px;
-    font-size: 12px;
-    color: var(--text-muted);
+    font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 13px;
+    color: var(--black); box-shadow: var(--sh);
   }
 
   .user-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--blue);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 600;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--red); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    border: 2px solid var(--black);
   }
 
   .sign-out-btn {
-    border: 1px solid var(--border);
-    background: transparent;
-    border-radius: var(--radius);
-    padding: 5px 12px;
-    cursor: pointer;
-    font-size: 12px;
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text-muted);
-    transition: all 0.12s;
+    border: var(--bd); background: var(--white);
+    padding: 6px 12px; cursor: pointer;
+    font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 12px;
+    color: var(--black); box-shadow: var(--sh); transition: all 0.08s;
+    text-transform: uppercase;
   }
+  .sign-out-btn:hover { background: var(--red); color: #fff; transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); }
 
-  .sign-out-btn:hover { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
-
-  /* ── AUTH SCREEN ── */
   .auth-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 56px);
-    padding: 40px 24px;
-    text-align: center;
-    gap: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: calc(100vh - 64px); padding: 40px 24px; text-align: center;
   }
 
   .auth-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 40px 48px;
-    max-width: 420px;
-    width: 100%;
+    background: var(--white); border: var(--bd-thick);
+    box-shadow: var(--sh-lg); padding: 40px 48px;
+    max-width: 440px; width: 100%; position: relative;
   }
 
   .auth-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
-    background: var(--blue-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 24px;
+    width: 60px; height: 60px; background: var(--yellow);
+    border: var(--bd); box-shadow: var(--sh);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px; font-size: 28px;
   }
 
   .auth-card h2 {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    letter-spacing: -0.3px;
+    font-family: 'Bangers', cursive; font-size: 32px; letter-spacing: 2px;
+    margin-bottom: 10px; text-shadow: 2px 2px 0 var(--yellow);
   }
 
-  .auth-card p {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    margin-bottom: 28px;
-  }
+  .auth-card p { font-size: 13px; font-weight: 700; color: #333; line-height: 1.6; margin-bottom: 28px; }
 
   .google-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: #4285F4;
-    color: #fff;
-    border: none;
-    border-radius: var(--radius);
-    padding: 11px 20px;
-    font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.12s;
-    width: 100%;
-    justify-content: center;
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--blue); color: #fff; border: var(--bd);
+    padding: 12px 20px; font-size: 15px;
+    font-family: 'Comic Neue', cursive; font-weight: 700; cursor: pointer;
+    box-shadow: var(--sh); width: 100%; justify-content: center;
+    transition: all 0.08s; text-transform: uppercase; letter-spacing: 1px;
   }
-
-  .google-btn:hover { background: #3367D6; }
-
+  .google-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); }
   .google-btn svg { width: 18px; height: 18px; }
 
   .auth-setup {
-    margin-top: 24px;
-    padding: 16px;
-    background: var(--bg);
-    border-radius: var(--radius);
-    text-align: left;
+    margin-top: 24px; padding: 16px;
+    background: var(--yellow); border: var(--bd); box-shadow: var(--sh); text-align: left;
   }
 
   .auth-setup h4 {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    margin-bottom: 10px;
+    font-family: 'Bangers', cursive; font-size: 16px; letter-spacing: 1px;
+    color: var(--black); margin-bottom: 10px;
   }
 
   .setup-step {
-    display: flex;
-    gap: 10px;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    align-items: flex-start;
-    line-height: 1.5;
+    display: flex; gap: 10px; font-size: 12px; font-weight: 700;
+    color: var(--black); margin-bottom: 6px; align-items: flex-start; line-height: 1.5;
   }
 
   .setup-num {
-    min-width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--border-strong);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-top: 1px;
+    min-width: 20px; height: 20px; border-radius: 50%;
+    background: var(--red); border: 2px solid var(--black);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; margin-top: 1px; flex-shrink: 0;
   }
 
   .client-id-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    background: var(--surface);
-    color: var(--text);
-    margin-top: 8px;
-    outline: none;
+    width: 100%; padding: 8px 12px; border: var(--bd);
+    font-family: 'Comic Neue', cursive; font-size: 11px; font-weight: 700;
+    background: var(--white); color: var(--black); margin-top: 8px; outline: none;
+    box-shadow: var(--sh);
   }
+  .client-id-input:focus { outline: 2px solid var(--blue); }
 
-  .client-id-input:focus { border-color: var(--blue); }
-
-  .client-id-input::placeholder { color: var(--text-faint); }
-
-  /* ── CALENDAR TABLE ── */
-  .cal-wrapper { overflow-x: auto; padding-top: 2px; }
+  .cal-wrapper { overflow-x: auto; padding: 16px; }
 
   .cal-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 800px;
+    width: 100%; border-collapse: separate; border-spacing: 4px; min-width: 800px;
   }
 
   .cal-table thead th {
-    background: var(--surface);
-    border-bottom: 3px solid var(--border);
-    border-right: 1px solid var(--border);
-    padding: 10px 8px 12px;
-    text-align: center;
-    position: sticky;
-    top: 56px;
-    z-index: 5;
-    box-shadow: 0 4px 0 var(--bg);
+    background: var(--black); color: var(--yellow);
+    border: var(--bd); padding: 10px 8px;
+    text-align: center; position: sticky; top: 64px; z-index: 5;
+    box-shadow: var(--sh);
   }
 
   .col-person-head {
-    width: 120px;
-    text-align: left !important;
-    padding-left: 16px !important;
+    width: 130px; text-align: left !important; padding-left: 12px !important;
+    background: var(--red) !important; color: #fff !important;
   }
 
-  .day-head-num {
-    font-size: 18px;
-    font-weight: 300;
-    color: var(--text);
-    line-height: 1;
-  }
+  .day-head-num { font-family: 'Bangers', cursive; font-size: 24px; letter-spacing: 1px; line-height: 1; }
+  .day-head-name { font-family: 'Comic Neue', cursive; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; color: var(--yellow); }
 
-  .day-head-name {
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text-faint);
-    margin-top: 2px;
-  }
-
-  .today-head .day-head-num { color: var(--blue); font-weight: 500; }
-  .today-head .day-head-name { color: var(--blue); }
+  .today-head { background: var(--yellow) !important; }
+  .today-head .day-head-num { color: var(--red); }
+  .today-head .day-head-name { color: var(--black); }
 
   .person-cell {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 8px 10px 16px;
-    vertical-align: top;
-    white-space: nowrap;
-    position: sticky;
-    left: 0;
-    z-index: 3;
+    background: var(--white); border: var(--bd);
+    padding: 8px 8px 8px 10px; vertical-align: top; white-space: nowrap;
+    position: sticky; left: 0; z-index: 3; box-shadow: var(--sh);
   }
 
-  .person-inner {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+  .person-inner { display: flex; align-items: center; gap: 8px; }
 
   .person-avatar {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 600;
-    flex-shrink: 0;
-    color: #fff;
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bangers', cursive; font-size: 14px; letter-spacing: 0.5px;
+    flex-shrink: 0; color: #fff;
+    border: 2px solid var(--black); box-shadow: 2px 2px 0 var(--black);
   }
 
   .person-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text);
+    font-family: 'Comic Neue', cursive; font-size: 12px; font-weight: 700;
+    color: var(--black); text-transform: uppercase; letter-spacing: 0.3px;
   }
 
   .event-td {
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 4px;
-    vertical-align: top;
-    height: 44px;
-    min-width: 100px;
-    overflow: hidden;
+    border: var(--bd); padding: 4px; vertical-align: top;
+    height: 50px; min-width: 100px; overflow: hidden;
+    background: var(--white); box-shadow: var(--sh);
   }
 
-  .cal-table tbody tr:first-child td {
-    border-top: none;
-  }
-
-  .today-td { background: var(--today-bg); }
+  .today-td { background: #FFFDE0 !important; border-color: var(--red) !important; border-width: 3px !important; }
 
   .event-pill {
-    border-radius: 4px;
-    padding: 3px 8px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    cursor: pointer;
-    margin-bottom: 2px;
-    display: block;
-    transition: filter 0.1s;
-    color: #000;
+    border: 2px solid var(--black); padding: 2px 7px;
+    font-family: 'Comic Neue', cursive; font-size: 11px; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%; cursor: pointer; margin-bottom: 3px; display: block;
+    box-shadow: 2px 2px 0 var(--black); transition: all 0.08s;
+    color: #000; text-transform: uppercase; letter-spacing: 0.2px;
   }
+  .event-pill:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--black); }
 
-  .event-pill:hover { filter: brightness(0.9); }
-
-  .event-allday {
-    border-radius: 4px;
-    padding: 3px 8px;
-  }
-
-  /* ── LOADING ── */
-  .loading-overlay {
-    padding: 80px 24px;
-    text-align: center;
-  }
-
-  .spinner {
-    width: 32px;
-    height: 32px;
-    border: 2px solid var(--border);
-    border-top-color: var(--blue);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto 16px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading-text {
-    font-size: 13px;
-    color: var(--text-muted);
-  }
-
-  /* ── LEGEND BAR ── */
-  .legend-bar {
-    padding: 8px 24px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-
-  .legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  /* ── TOOLTIP ── */
-  .tooltip {
-    position: fixed;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 12px;
-    z-index: 999;
-    pointer-events: none;
-    max-width: 240px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    display: none;
-  }
-
-  .tooltip-title {
-    font-weight: 500;
-    margin-bottom: 3px;
-    color: var(--text);
-  }
-
-  .tooltip-time {
-    color: var(--text-muted);
-    font-size: 11px;
-  }
-
-  .tooltip-cal {
-    margin-top: 4px;
-    font-size: 11px;
-    color: var(--text-faint);
-    font-style: italic;
-  }
-
-  /* ── ERROR ── */
-  .error-banner {
-    background: #FEF2F2;
-    border: 1px solid #FECACA;
-    border-radius: var(--radius);
-    padding: 10px 16px;
-    font-size: 13px;
-    color: #DC2626;
-    margin: 16px 24px;
-  }
+  .event-allday { border: 2px solid var(--black); padding: 2px 7px; }
 
   .empty-warning {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 32px;
-    font-size: 16px;
-    opacity: 0.5;
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; font-size: 18px; opacity: 0.6;
+  }
+
+  .loading-overlay { padding: 80px 24px; text-align: center; }
+
+  .spinner {
+    width: 36px; height: 36px;
+    border: 4px solid var(--black); border-top-color: var(--yellow);
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+    margin: 0 auto 16px; box-shadow: var(--sh);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text { font-family: 'Bangers', cursive; font-size: 20px; letter-spacing: 2px; color: var(--black); }
+
+  .legend-bar {
+    padding: 8px 16px; border-bottom: var(--bd);
+    background: var(--black);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-family: 'Comic Neue', cursive; font-size: 11px; font-weight: 700;
+    color: var(--yellow); text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 2px solid var(--yellow); }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+
+  .tooltip {
+    position: fixed; background: var(--yellow); border: var(--bd-thick);
+    padding: 10px 14px; font-family: 'Comic Neue', cursive; font-size: 12px;
+    z-index: 999; pointer-events: none; max-width: 240px;
+    box-shadow: var(--sh-lg); display: none;
+  }
+  .tooltip-title { font-weight: 700; margin-bottom: 3px; text-transform: uppercase; }
+  .tooltip-time { font-weight: 400; font-size: 11px; }
+  .tooltip-cal { margin-top: 4px; font-size: 11px; color: #555; font-style: italic; }
+
+  .error-banner {
+    background: var(--red); border: var(--bd-thick); box-shadow: var(--sh);
+    padding: 12px 16px; font-family: 'Comic Neue', cursive; font-weight: 700;
+    font-size: 13px; color: #fff; margin: 16px 24px; text-transform: uppercase;
   }
 </style>
 </head>
