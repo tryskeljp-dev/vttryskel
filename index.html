@@ -735,7 +735,7 @@ async function loadCalendars() {
   showLoading('Chargement des calendriers...');
   try {
     const resp = await gapi.client.calendar.calendarList.list({ maxResults: 50 });
-    allCalendars = (resp.result.items || []).filter(cal => cal.summary && cal.summary.includes('%'));
+    allCalendars = resp.result.items || [];
     await loadEventsForWeek();
   } catch(e) {
     showError('Erreur lors du chargement des calendriers : ' + e.message);
