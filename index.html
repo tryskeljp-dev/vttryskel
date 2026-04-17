@@ -3,765 +3,3066 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AutoremCal — Google Agenda</title>
-<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+<title>Strava Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --black: #0A0A0A;
-    --white: #FFFEF5;
-    --yellow: #FFE234;
-    --red: #E8272A;
-    --blue: #1A56DB;
-    --bd: 3px solid #0A0A0A;
-    --bd-thick: 4px solid #0A0A0A;
-    --sh: 4px 4px 0 #0A0A0A;
-    --sh-lg: 6px 6px 0 #0A0A0A;
+    --orange: #FC4C02;
+    --orange-dim: #c93c00;
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0ece6;
+    --muted: rgba(240,236,230,0.45);
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
   }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Comic Neue', cursive;
-    background: var(--white);
-    background-image:
-      repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(0,0,0,0.04) 28px, rgba(0,0,0,0.04) 29px),
-      repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(0,0,0,0.04) 28px, rgba(0,0,0,0.04) 29px);
-    color: var(--black);
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
     min-height: 100vh;
-    font-size: 14px;
+    overflow-x: hidden;
   }
 
-  .app-header {
-    background: var(--yellow);
-    border-bottom: var(--bd-thick);
-    padding: 0 24px;
-    height: 64px;
+  /* ── Noise texture overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  /* ── AUTH SCREEN ── */
+  #auth-screen {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 16px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 4px 0 var(--black);
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
   }
 
-  .logo {
-    font-family: 'Bangers', cursive;
-    font-size: 28px;
-    letter-spacing: 2px;
-    color: var(--black);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-shadow: 2px 2px 0 var(--red);
-  }
-
-  .logo-dot {
-    width: 12px; height: 12px;
+  .auth-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
     border-radius: 50%;
-    background: var(--red);
-    border: 2px solid var(--black);
-    box-shadow: 2px 2px 0 var(--black);
-  }
-
-  .nav-controls { display: flex; align-items: center; gap: 6px; margin-left: 8px; }
-
-  .nav-btn {
-    border: var(--bd);
-    background: var(--white);
-    width: 34px; height: 34px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 900;
-    color: var(--black);
-    box-shadow: var(--sh);
-    transition: all 0.08s;
-  }
-  .nav-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); background: var(--red); color: #fff; }
-  .nav-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--black); }
-
-  .week-label {
-    font-family: 'Bangers', cursive;
-    font-size: 18px; letter-spacing: 1px;
-    color: var(--black); min-width: 160px; padding: 0 6px;
-  }
-
-  .today-btn {
-    border: var(--bd); background: var(--white);
-    padding: 6px 14px; cursor: pointer;
-    font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 13px;
-    color: var(--black); box-shadow: var(--sh); transition: all 0.08s;
-    text-transform: uppercase; letter-spacing: 0.5px;
-  }
-  .today-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); background: var(--blue); color: #fff; }
-
-  .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-
-  .user-chip {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--white); border: var(--bd);
-    padding: 4px 12px 4px 4px;
-    font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 13px;
-    color: var(--black); box-shadow: var(--sh);
-  }
-
-  .user-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--red); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700;
-    border: 2px solid var(--black);
-  }
-
-  .sign-out-btn {
-    border: var(--bd); background: var(--white);
-    padding: 6px 12px; cursor: pointer;
-    font-family: 'Comic Neue', cursive; font-weight: 700; font-size: 12px;
-    color: var(--black); box-shadow: var(--sh); transition: all 0.08s;
-    text-transform: uppercase;
-  }
-  .sign-out-btn:hover { background: var(--red); color: #fff; transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); }
-
-  .auth-screen {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: calc(100vh - 64px); padding: 40px 24px; text-align: center;
+    background: radial-gradient(circle, rgba(252,76,2,0.15) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
   }
 
   .auth-card {
-    background: var(--white); border: var(--bd-thick);
-    box-shadow: var(--sh-lg); padding: 40px 48px;
-    max-width: 440px; width: 100%; position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 0 80px rgba(252,76,2,0.08), 0 40px 80px rgba(0,0,0,0.5);
   }
 
-  .auth-icon {
-    width: 60px; height: 60px; background: var(--yellow);
-    border: var(--bd); box-shadow: var(--sh);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px; font-size: 28px;
+  .strava-logo {
+    width: 60px;
+    height: 60px;
+    background: var(--orange);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 1.8rem;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: -1px;
+    box-shadow: 0 8px 30px rgba(252,76,2,0.4);
   }
 
-  .auth-card h2 {
-    font-family: 'Bangers', cursive; font-size: 32px; letter-spacing: 2px;
-    margin-bottom: 10px; text-shadow: 2px 2px 0 var(--yellow);
+  .auth-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 0.5rem;
   }
 
-  .auth-card p { font-size: 13px; font-weight: 700; color: #333; line-height: 1.6; margin-bottom: 28px; }
+  .auth-title span { color: var(--orange); }
 
-  .google-btn {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: var(--blue); color: #fff; border: var(--bd);
-    padding: 12px 20px; font-size: 15px;
-    font-family: 'Comic Neue', cursive; font-weight: 700; cursor: pointer;
-    box-shadow: var(--sh); width: 100%; justify-content: center;
-    transition: all 0.08s; text-transform: uppercase; letter-spacing: 1px;
-  }
-  .google-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); }
-  .google-btn svg { width: 18px; height: 18px; }
-
-  .auth-setup {
-    margin-top: 24px; padding: 16px;
-    background: var(--yellow); border: var(--bd); box-shadow: var(--sh); text-align: left;
+  .auth-sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
   }
 
-  .auth-setup h4 {
-    font-family: 'Bangers', cursive; font-size: 16px; letter-spacing: 1px;
-    color: var(--black); margin-bottom: 10px;
+  .config-group {
+    text-align: left;
+    margin-bottom: 1rem;
   }
 
-  .setup-step {
-    display: flex; gap: 10px; font-size: 12px; font-weight: 700;
-    color: var(--black); margin-bottom: 6px; align-items: flex-start; line-height: 1.5;
+  .config-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
   }
 
-  .setup-num {
-    min-width: 20px; height: 20px; border-radius: 50%;
-    background: var(--red); border: 2px solid var(--black);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 700; color: #fff; margin-top: 1px; flex-shrink: 0;
+  .config-group input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
   }
 
-  .client-id-input {
-    width: 100%; padding: 8px 12px; border: var(--bd);
-    font-family: 'Comic Neue', cursive; font-size: 11px; font-weight: 700;
-    background: var(--white); color: var(--black); margin-top: 8px; outline: none;
-    box-shadow: var(--sh);
-  }
-  .client-id-input:focus { outline: 2px solid var(--blue); }
-
-  .cal-wrapper { overflow-x: auto; padding: 16px; }
-
-  .cal-table {
-    width: 100%; border-collapse: separate; border-spacing: 4px; min-width: 800px;
+  .config-group input:focus {
+    border-color: var(--orange);
   }
 
-  .cal-table thead th {
-    background: var(--black); color: var(--yellow);
-    border: var(--bd); padding: 10px 8px;
-    text-align: center; position: sticky; top: 64px; z-index: 5;
-    box-shadow: var(--sh);
+  .hint {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.35rem;
+    line-height: 1.4;
   }
 
-  .col-person-head {
-    width: 130px; text-align: left !important; padding-left: 12px !important;
-    background: var(--red) !important; color: #fff !important;
+  .btn-strava {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(252,76,2,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
   }
 
-  .day-head-num { font-family: 'Bangers', cursive; font-size: 24px; letter-spacing: 1px; line-height: 1; }
-  .day-head-name { font-family: 'Comic Neue', cursive; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; color: var(--yellow); }
-
-  .today-head { background: var(--yellow) !important; }
-  .today-head .day-head-num { color: var(--red); }
-  .today-head .day-head-name { color: var(--black); }
-
-  .person-cell {
-    background: var(--white); border: var(--bd);
-    padding: 8px 8px 8px 10px; vertical-align: top; white-space: nowrap;
-    position: sticky; left: 0; z-index: 3; box-shadow: var(--sh);
+  .btn-strava:hover {
+    background: var(--orange-dim);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 30px rgba(252,76,2,0.4);
   }
 
-  .person-inner { display: flex; align-items: center; gap: 8px; }
-
-  .person-avatar {
-    width: 30px; height: 30px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Bangers', cursive; font-size: 14px; letter-spacing: 0.5px;
-    flex-shrink: 0; color: #fff;
-    border: 2px solid var(--black); box-shadow: 2px 2px 0 var(--black);
+  .btn-demo {
+    width: 100%;
+    padding: 0.75rem;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition: all 0.2s;
   }
 
-  .person-name {
-    font-family: 'Comic Neue', cursive; font-size: 12px; font-weight: 700;
-    color: var(--black); text-transform: uppercase; letter-spacing: 0.3px;
+  .btn-demo:hover {
+    color: var(--text);
+    border-color: rgba(255,255,255,0.2);
   }
 
-  .event-td {
-    border: var(--bd); padding: 4px; vertical-align: top;
-    height: 50px; min-width: 100px; overflow: hidden;
-    background: var(--white); box-shadow: var(--sh);
+  .steps {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    text-align: left;
   }
 
-  .today-td { background: #FFFDE0 !important; border-color: var(--red) !important; border-width: 3px !important; }
-
-  .event-pill {
-    border: 2px solid var(--black); padding: 2px 7px;
-    font-family: 'Comic Neue', cursive; font-size: 11px; font-weight: 700;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 100%; cursor: pointer; margin-bottom: 3px; display: block;
-    box-shadow: 2px 2px 0 var(--black); transition: all 0.08s;
-    color: #000; text-transform: uppercase; letter-spacing: 0.2px;
-  }
-  .event-pill:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--black); }
-
-  .event-allday { border: 2px solid var(--black); padding: 2px 7px; }
-
-  .empty-warning {
-    display: flex; align-items: center; justify-content: center;
-    height: 100%; font-size: 18px; opacity: 0.6;
+  .steps-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
   }
 
-  .loading-overlay { padding: 80px 24px; text-align: center; }
-
-  .spinner {
-    width: 36px; height: 36px;
-    border: 4px solid var(--black); border-top-color: var(--yellow);
-    border-radius: 50%; animation: spin 0.6s linear infinite;
-    margin: 0 auto 16px; box-shadow: var(--sh);
+  .step {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
   }
+
+  .step-num {
+    background: var(--orange);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+  .step a { color: var(--orange); text-decoration: none; }
+
+  /* ── LOADING ── */
+  #loading-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 1rem;
+  }
+
+  .loader {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .loading-text { font-family: 'Bangers', cursive; font-size: 20px; letter-spacing: 2px; color: var(--black); }
-
-  .legend-bar {
-    padding: 8px 16px; border-bottom: var(--bd);
-    background: var(--black);
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    font-family: 'Comic Neue', cursive; font-size: 11px; font-weight: 700;
-    color: var(--yellow); text-transform: uppercase; letter-spacing: 0.5px;
+  /* ── DASHBOARD ── */
+  #dashboard {
+    display: none;
+    min-height: 100vh;
   }
 
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 2px solid var(--yellow); }
-  .legend-item { display: flex; align-items: center; gap: 5px; }
-
-  .tooltip {
-    position: fixed; background: var(--yellow); border: var(--bd-thick);
-    padding: 10px 14px; font-family: 'Comic Neue', cursive; font-size: 12px;
-    z-index: 999; pointer-events: none; max-width: 240px;
-    box-shadow: var(--sh-lg); display: none;
+  /* Header */
+  .dash-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,10,0.8);
+    backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-  .tooltip-title { font-weight: 700; margin-bottom: 3px; text-transform: uppercase; }
-  .tooltip-time { font-weight: 400; font-size: 11px; }
-  .tooltip-cal { margin-top: 4px; font-size: 11px; color: #555; font-style: italic; }
 
-  .error-banner {
-    background: var(--red); border: var(--bd-thick); box-shadow: var(--sh);
-    padding: 12px 16px; font-family: 'Comic Neue', cursive; font-weight: 700;
-    font-size: 13px; color: #fff; margin: 16px 24px; text-transform: uppercase;
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 3px;
+  }
+
+  .logo-text span { color: var(--orange); }
+  .version-badge {
+    font-size: 0.55rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    vertical-align: middle;
+    margin-left: 0.3rem;
+    position: relative;
+    top: -2px;
+  }
+
+  .header-athlete {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .athlete-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--orange);
+    object-fit: cover;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    overflow: hidden;
+  }
+
+  .athlete-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .btn-logout {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-logout:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  /* Main layout */
+  .dash-main {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Period selector */
+  .period-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .period-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+  }
+
+  .period-tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.25rem;
+  }
+
+  .period-tab {
+    padding: 0.4rem 1rem;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .period-tab.active {
+    background: var(--orange);
+    color: white;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(252,76,2,0.3);
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(252,76,2,0.12) 0%, transparent 70%);
+    transform: translate(20px, -20px);
+  }
+
+  .stat-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 1px;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-val span { color: var(--orange); }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Two-col layout */
+  .dash-cols {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .dash-cols { grid-template-columns: 1fr; }
+  }
+
+  /* Chart card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .card-head {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+
+  .card-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    background: rgba(252,76,2,0.15);
+    color: var(--orange);
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .card-body { padding: 1.5rem; }
+
+  /* Chart */
+  .chart-wrap {
+    position: relative;
+    height: 200px;
+    padding: 0 0 1.5rem;
+  }
+
+  canvas { display: block; }
+
+  /* Activity list */
+  .activity-list { display: flex; flex-direction: column; gap: 0; }
+
+  .act-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+
+  .act-item:last-child { border-bottom: none; }
+  .act-item:hover { background: var(--surface2); }
+
+  .act-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .act-icon.run { background: rgba(252,76,2,0.15); }
+  .act-icon.ride { background: rgba(96,165,250,0.15); }
+  .act-icon.swim { background: rgba(167,139,250,0.15); }
+  .act-icon.walk { background: rgba(74,222,128,0.15); }
+  .act-icon.hike { background: rgba(250,204,21,0.15); }
+  .act-icon.other { background: rgba(255,255,255,0.07); }
+
+  .act-info { flex: 1; min-width: 0; }
+
+  .act-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.15rem;
+  }
+
+  a.act-strava-link {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  a.act-strava-link:hover { color: var(--orange); }
+
+  .act-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .act-stats {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .act-dist {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    color: var(--orange);
+  }
+
+  .act-time {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* Map / heatmap placeholder */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(52, 1fr);
+    gap: 2px;
+  }
+
+  .hm-day {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: var(--surface2);
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+
+  .hm-day:hover { opacity: 0.8; }
+
+  .hm-0 { background: var(--surface2); }
+  .hm-1 { background: rgba(252,76,2,0.25); }
+  .hm-2 { background: rgba(252,76,2,0.45); }
+  .hm-3 { background: rgba(252,76,2,0.7); }
+  .hm-4 { background: var(--orange); }
+
+  /* Zones */
+  .zone-bars { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .zone-row { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .zone-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+  }
+
+  .zone-name { color: var(--muted); }
+  .zone-pct { font-weight: 600; }
+
+  .zone-bar-bg {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .zone-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-card:nth-child(1) { animation-delay: 0.05s; }
+  .stat-card:nth-child(2) { animation-delay: 0.1s; }
+  .stat-card:nth-child(3) { animation-delay: 0.15s; }
+  .stat-card:nth-child(4) { animation-delay: 0.2s; }
+  .stat-card:nth-child(5) { animation-delay: 0.25s; }
+
+  .error-msg {
+    background: rgba(255,80,80,0.1);
+    border: 1px solid rgba(255,80,80,0.3);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: #f87171;
+    font-size: 0.82rem;
+    margin-top: 1rem;
+    display: none;
+  }
+
+  .token-info {
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-size: 0.78rem;
+    color: var(--green);
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  /* ── CYCLING MODE TOGGLE ── */
+  .cy-mode-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.25rem;
+    gap: 0.2rem;
+    flex-shrink: 0;
+  }
+
+  .cy-mode-btn {
+    padding: 0.45rem 1.1rem;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    color: var(--muted);
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .cy-mode-btn:hover { color: var(--text); }
+  .cy-mode-btn.active { background: var(--orange); color: white; }
+
+  /* ── SELECTOR PANEL ── */
+  .cy-selector-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .year-picker-group, .month-picker-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .picker-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .year-chips, .month-chips {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+
+  .year-chip {
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .month-chip {
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  .year-chip:hover, .month-chip:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  .year-chip.active-a, .month-chip.active-a { background: rgba(252,76,2,0.18); border-color: var(--orange); color: var(--orange); }
+  .year-chip.active-b, .month-chip.active-b { background: rgba(96,165,250,0.18); border-color: var(--blue); color: var(--blue); }
+
+  .vs-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    padding-top: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  /* ── YTD BANNER ── */
+  .ytd-banner {
+    background: var(--surface);
+    border: 1px solid rgba(252,76,2,0.25);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ytd-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(252,76,2,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .ytd-banner-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .ytd-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--orange);
+  }
+
+  .ytd-note {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .ytd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .ytd-year-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem 1rem 1.4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ytd-year-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 0.6rem;
+  }
+
+  .ytd-rows { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .ytd-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+  }
+
+  .ytd-row-label { color: var(--muted); }
+  .ytd-row-val   { font-weight: 600; }
+
+  .ytd-accent-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+  }
+
+  .ytd-diff-block {
+    border-color: rgba(255,255,255,0.12) !important;
+    background: rgba(255,255,255,0.03);
+    order: -1;
+  }
+
+  .diff-pos { color: #4ade80; font-weight: 700; }
+  .diff-neg { color: #f87171; font-weight: 700; }
+  .diff-neu { color: var(--muted); }
+
+  /* ── PODIUM ── */
+  .podium-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .podium-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem 1.25rem 1.25rem;
+    text-align: center;
+    position: relative;
+    transition: transform .15s;
+    cursor: default;
+    flex: 1;
+    max-width: 240px;
+  }
+
+  .podium-block:hover { transform: translateY(-3px); }
+
+  .podium-block.p1 {
+    border-color: #f59e0b;
+    box-shadow: 0 0 24px rgba(245,158,11,0.15);
+    padding-top: 1.5rem;
+  }
+  .podium-block.p2 { border-color: #9ca3af; }
+  .podium-block.p3 { border-color: #b45309; }
+
+  .podium-medal { font-size: 2rem; line-height: 1; margin-bottom: 0.4rem; }
+  .podium-dist  { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:2px; line-height:1; }
+  .podium-name  { font-size:0.8rem; font-weight:600; margin: 0.35rem 0 0.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .podium-meta  { font-size:0.7rem; color:var(--muted); }
+  .podium-rank  { position:absolute; top:0.6rem; right:0.8rem; font-size:0.65rem; color:var(--muted); letter-spacing:1px; }
+
+  .rank-row-top td { background: rgba(245,158,11,0.06); }
+  .rank-num { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:var(--muted); text-align:center; }
+  .rank-num.gold   { color:#f59e0b; }
+  .rank-num.silver { color:#9ca3af; }
+  .rank-num.bronze { color:#b45309; }
+  .rank-bar-wrap { display:flex; align-items:center; gap:0.5rem; }
+  .rank-bar { height:4px; border-radius:2px; background:var(--orange); flex-shrink:0; transition:width .3s; }
+
+  /* ── YEAR SELECTOR (legacy kept for compat) ── */
+  .year-selector-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .year-pickers {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .year-picker-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .year-vs-sep {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    padding-top: 1.2rem;
+  }
+
+  /* ── NAV TABS ── */
+  .dash-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    background: rgba(10,10,10,0.6);
+  }
+
+  .nav-tab {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-tab:hover { color: var(--text); }
+
+  .nav-tab.active {
+    color: var(--orange);
+    border-bottom-color: var(--orange);
+  }
+
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  /* ── CYCLING TAB ── */
+  .cycling-hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .cycling-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .cycling-stat::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--c1, var(--orange)), var(--c2, #ff8c00));
+  }
+
+  .cs-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .cs-vals {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .cs-2026 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--orange);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .cs-vs {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .cs-2025 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: var(--blue);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .cs-delta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    margin-left: auto;
+  }
+
+  .cs-delta.pos { background: rgba(74,222,128,0.15); color: var(--green); }
+  .cs-delta.neg { background: rgba(252,76,2,0.12); color: var(--orange); }
+  .cs-delta.neu { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+  /* comparison chart */
+  .compare-chart-wrap {
+    position: relative;
+    height: 280px;
+    cursor: pointer;
+  }
+
+  /* metric switcher */
+  .metric-tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 0.2rem;
+  }
+
+  .metric-tab {
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    color: var(--muted);
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .metric-tab.active { background: var(--surface); color: var(--text); }
+
+  /* rides table */
+  .rides-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .rides-table th {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  .rides-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .rides-table tr:last-child td { border-bottom: none; }
+  .rides-table tr:hover td { background: var(--surface2); }
+
+  .week-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .week-dates { font-size: 0.68rem; color: var(--muted); }
+
+  .val-2026 { font-weight: 600; color: var(--orange); }
+  .val-2025 { color: var(--blue); }
+
+  .diff-pill {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .diff-pill.pos { background: rgba(74,222,128,0.15); color: var(--green); }
+  .diff-pill.neg { background: rgba(252,76,2,0.12); color: #f87171; }
+  .diff-pill.neu { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+  .mini-bar-wrap {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: 24px;
+  }
+
+  .mini-bar {
+    width: 8px;
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* responsive */
+  @media (max-width: 768px) {
+    .dash-header { padding: 1rem; }
+    .dash-main { padding: 1rem; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .heatmap-grid { grid-template-columns: repeat(26, 1fr); }
+    .dash-nav { padding: 0 1rem; overflow-x: auto; }
+    .nav-tab { white-space: nowrap; padding: 0.85rem 1rem; }
+    .rides-table { font-size: 0.75rem; }
+    .rides-table th, .rides-table td { padding: 0.6rem 0.5rem; }
   }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     CONFIGURATION — REMPLISSEZ ICI VOTRE CLIENT ID
-     ═══════════════════════════════════════════════ -->
-<script>
-  // ÉTAPE 1 : Créez un projet sur https://console.cloud.google.com
-  // ÉTAPE 2 : Activez "Google Calendar API"
-  // ÉTAPE 3 : Créez des identifiants OAuth 2.0 (type "Application Web")
-  //           Dans "Origines JavaScript autorisées", ajoutez : file://
-  //           (ou http://localhost si vous servez via un serveur local)
-  // ÉTAPE 4 : Collez votre Client ID ci-dessous
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-glow"></div>
+  <div class="auth-card">
+    <div class="strava-logo">S</div>
+    <h1 class="auth-title">STRAVA <span>DASH</span></h1>
+    <p class="auth-sub">Connectez votre compte Strava pour visualiser vos performances, analyses et historique d'activités.</p>
 
-  const GOOGLE_CLIENT_ID = ""; // ← VOTRE CLIENT ID ICI (ex: "123456.apps.googleusercontent.com")
-</script>
+    <div id="token-info" class="token-info">✓ Token détecté dans l'URL — connexion en cours…</div>
+    <div id="error-msg" class="error-msg"></div>
 
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<!-- GAPI -->
-<script src="https://apis.google.com/js/api.js" async defer></script>
+    <div class="config-group">
+      <label>Client ID</label>
+      <input type="text" id="client-id" placeholder="Votre Client ID Strava">
+      <p class="hint">Trouvez-le sur <a href="https://www.strava.com/settings/api" target="_blank" style="color:var(--orange)">strava.com/settings/api</a></p>
+    </div>
 
-<!-- App Header -->
-<header class="app-header" id="app-header">
-  <div class="logo">
-    <div class="logo-dot"></div>
-    AutoremCal
-  </div>
-  <div class="nav-controls" id="nav-controls" style="display:none;">
-    <button class="nav-btn" id="prev-btn" title="Semaine précédente">&#8592;</button>
-    <button class="today-btn" id="today-btn">Aujourd'hui</button>
-    <button class="nav-btn" id="next-btn" title="Semaine suivante">&#8594;</button>
-    <span class="week-label" id="week-label"></span>
-    <button class="nav-btn" id="refresh-btn" title="Rafraîchir" style="margin-left:4px;">&#8635;</button>
-  </div>
-  <div class="header-right" id="header-right"></div>
-</header>
+    <div class="config-group">
+      <label>Client Secret</label>
+      <input type="password" id="client-secret" placeholder="Votre Client Secret">
+    </div>
 
-<main id="main-content">
-  <!-- Auth screen shown by default -->
-  <div id="auth-screen" class="auth-screen">
-    <div class="auth-card">
-      <div class="auth-icon">📅</div>
-      <h2>Connectez Google Agenda</h2>
-      <p>Affichez tous vos calendriers dans une vue multi-personnes style AutoremCal. Vos données restent locales.</p>
+    <button class="btn-strava" onclick="connectStrava()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+      CONNECTER AVEC STRAVA
+    </button>
+    <button class="btn-demo" onclick="loadDemo()">Voir le dashboard en mode démo →</button>
 
-      <!-- CLIENT ID INLINE INPUT (fallback si non configuré dans le script) -->
-      <div id="client-id-form" style="margin-bottom: 16px; display:none;">
-        <input type="text" class="client-id-input" id="client-id-input"
-          placeholder="Collez votre Client ID Google OAuth (*.apps.googleusercontent.com)"
-          autocomplete="off" spellcheck="false">
+    <div class="steps">
+      <p class="steps-title">Comment obtenir vos clés API</p>
+      <div class="step">
+        <div class="step-num">1</div>
+        <p>Allez sur <a href="https://www.strava.com/settings/api" target="_blank">strava.com/settings/api</a> et créez une application.</p>
       </div>
-
-      <button class="google-btn" id="signin-btn">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>
-        Se connecter avec Google
-      </button>
-
-      <div class="auth-setup">
-        <h4>Première utilisation ?</h4>
-        <div class="setup-step">
-          <div class="setup-num">1</div>
-          <div>Allez sur <strong>console.cloud.google.com</strong> → Nouveau projet</div>
-        </div>
-        <div class="setup-step">
-          <div class="setup-num">2</div>
-          <div>APIs → Activez <strong>Google Calendar API</strong></div>
-        </div>
-        <div class="setup-step">
-          <div class="setup-num">3</div>
-          <div>Identifiants → OAuth 2.0 → Application Web → Ajoutez <code style="font-size:10px;background:#e5e3dc;padding:1px 4px;border-radius:3px;">file://</code> dans les origines autorisées</div>
-        </div>
-        <div class="setup-step">
-          <div class="setup-num">4</div>
-          <div>Copiez votre <strong>Client ID</strong> et collez-le dans le code (<code style="font-size:10px;background:#e5e3dc;padding:1px 4px;border-radius:3px;">GOOGLE_CLIENT_ID</code>)</div>
-        </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <p>Définissez l'URL de callback sur <strong style="color:var(--text)">{cette page}</strong> dans les paramètres de l'app.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <p>Copiez votre <strong style="color:var(--text)">Client ID</strong> et <strong style="color:var(--text)">Client Secret</strong> ci-dessus et cliquez sur connecter.</p>
       </div>
     </div>
   </div>
-
-  <!-- Calendar view (hidden until signed in) -->
-  <div id="cal-view" style="display:none;"></div>
-</main>
-
-<div class="tooltip" id="tooltip">
-  <div class="tooltip-title" id="tt-title"></div>
-  <div class="tooltip-time" id="tt-time"></div>
-  <div class="tooltip-cal" id="tt-cal"></div>
 </div>
 
-<script>
-// ══════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════
-let tokenClient = null;
-let gapiLoaded = false;
-let gisLoaded = false;
-let currentUser = null;
-let weekOffset = 0;
-let allCalendars = [];
-let allEvents = {};  // calId -> [events]
-let clientId = GOOGLE_CLIENT_ID;
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loader"></div>
+  <p style="color:var(--muted);font-size:0.85rem">Récupération de vos données Strava…</p>
+</div>
 
-const CALENDAR_COLORS = [
-  "#4285F4","#0F9D58","#E53935","#F4B400","#AB47BC",
-  "#00ACC1","#FF7043","#5C6BC0","#00897B","#8D6E63"
-];
-
-// ══════════════════════════════════════════
-//  GAPI + GIS INIT
-// ══════════════════════════════════════════
-function gapiLoaderReady() {
-  gapi.load('client', async () => {
-    await gapi.client.init({});
-    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest');
-    gapiLoaded = true;
-    maybeInitTokenClient();
-  });
-}
-
-window.addEventListener('load', () => {
-  // Poll for gapi
-  const checkGapi = setInterval(() => {
-    if (window.gapi) { clearInterval(checkGapi); gapiLoaderReady(); }
-  }, 100);
-  // Poll for GIS
-  const checkGis = setInterval(() => {
-    if (window.google && window.google.accounts) {
-      clearInterval(checkGis);
-      gisLoaded = true;
-      maybeInitTokenClient();
-    }
-  }, 100);
-  // Show client id input if not pre-configured
-  if (!clientId) {
-    document.getElementById('client-id-form').style.display = 'block';
-  }
-});
-
-function maybeInitTokenClient() {
-  if (!gapiLoaded || !gisLoaded) return;
-  const id = clientId || document.getElementById('client-id-input')?.value?.trim();
-  if (!id) return;
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: id,
-    scope: 'https://www.googleapis.com/auth/calendar.readonly',
-    callback: handleTokenResponse,
-  });
-}
-
-// ══════════════════════════════════════════
-//  AUTH FLOW
-// ══════════════════════════════════════════
-document.getElementById('signin-btn').addEventListener('click', () => {
-  // If no client id configured, read from input
-  if (!clientId) {
-    clientId = document.getElementById('client-id-input')?.value?.trim();
-    if (!clientId) {
-      alert('Veuillez entrer votre Client ID Google OAuth.');
-      return;
-    }
-  }
-  if (!gapiLoaded || !gisLoaded) {
-    alert('Les bibliothèques Google ne sont pas encore chargées. Vérifiez votre connexion internet et rechargez la page.');
-    return;
-  }
-  maybeInitTokenClient();
-  if (!tokenClient) {
-    alert('Impossible d\'initialiser le client OAuth. Vérifiez votre Client ID.');
-    return;
-  }
-  tokenClient.requestAccessToken({ prompt: 'consent' });
-});
-
-async function handleTokenResponse(resp) {
-  if (resp.error) {
-    showError('Erreur d\'authentification : ' + resp.error);
-    return;
-  }
-  // Get user info
-  try {
-    const profileResp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: 'Bearer ' + gapi.client.getToken().access_token }
-    });
-    const profile = await profileResp.json();
-    currentUser = profile;
-    showSignedInState(profile);
-    loadCalendars();
-  } catch(e) {
-    showError('Erreur lors de la récupération du profil : ' + e.message);
-  }
-}
-
-function showSignedInState(profile) {
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('cal-view').style.display = 'block';
-  document.getElementById('nav-controls').style.display = 'flex';
-
-  const hr = document.getElementById('header-right');
-  const initials = (profile.given_name?.[0] || '') + (profile.family_name?.[0] || profile.email?.[0] || '');
-  hr.innerHTML = `
-    <div class="user-chip">
-      <div class="user-avatar">${initials.toUpperCase()}</div>
-      ${profile.name || profile.email}
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <header class="dash-header">
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 15/03/2026 10:05</span></div>
+    <div class="header-athlete">
+      <div class="athlete-avatar" id="athlete-avatar">🏃</div>
+      <span class="athlete-name" id="athlete-name">Athlete</span>
+      <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>
-    <button class="sign-out-btn" id="signout-btn">Déconnexion</button>
-  `;
-  document.getElementById('signout-btn').addEventListener('click', () => {
-    google.accounts.oauth2.revoke(gapi.client.getToken().access_token, () => {
-      gapi.client.setToken(null);
-      currentUser = null;
-      document.getElementById('auth-screen').style.display = 'flex';
-      document.getElementById('cal-view').style.display = 'none';
-      document.getElementById('nav-controls').style.display = 'none';
-      hr.innerHTML = '';
-      allCalendars = [];
-      allEvents = {};
-    });
-  });
+  </header>
+
+  <nav class="dash-nav">
+    <button class="nav-tab active" onclick="switchTab('overview',this)">📊 Vue générale</button>
+    <button class="nav-tab" onclick="switchTab('cycling',this)">🚴 Comparaison Vélo Par Année</button>
+    <button class="nav-tab" onclick="switchTab('bikerank',this)">🏆 Sorties Vélo</button>
+    <button class="nav-tab" onclick="switchTab('bestyear',this)">📈 Meilleure Année Glissante</button>
+  </nav>
+
+  <!-- TAB: OVERVIEW -->
+  <div id="tab-overview" class="tab-page active">
+  <main class="dash-main">
+    <div class="period-bar">
+      <div class="period-label" id="period-title">MES STATS</div>
+      <div class="period-tabs">
+        <button class="period-tab active" onclick="setPeriod(4,'CE MOIS',this)">Ce mois</button>
+        <button class="period-tab" onclick="setPeriod(12,'TRIMESTRE',this)">Trimestre</button>
+        <button class="period-tab" onclick="setPeriod(52,'CETTE ANNÉE',this)">Année</button>
+        <button class="period-tab" onclick="setPeriod(9999,'TOUT',this)">Tout</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <span class="stat-icon">🏃</span>
+        <div class="stat-val" id="stat-activities">—</div>
+        <div class="stat-label">Activités</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">📏</span>
+        <div class="stat-val" id="stat-distance">—</div>
+        <div class="stat-label">Distance (km)</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">⏱️</span>
+        <div class="stat-val" id="stat-time">—</div>
+        <div class="stat-label">Temps total</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">⛰️</span>
+        <div class="stat-val" id="stat-elevation">—</div>
+        <div class="stat-label">Dénivelé (m)</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🔥</span>
+        <div class="stat-val" id="stat-calories">—</div>
+        <div class="stat-label">Calories</div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="dash-cols">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">DISTANCE PAR SEMAINE</span>
+          <span class="card-badge" id="chart-type-badge">KM</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap">
+            <canvas id="distChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">ZONES DE FRÉQUENCE</span>
+          <span class="card-badge">CARDIO</span>
+        </div>
+        <div class="card-body">
+          <div class="zone-bars" id="zone-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title">HEATMAP D'ACTIVITÉ</span>
+        <span class="card-badge">52 SEMAINES</span>
+      </div>
+      <div class="card-body">
+        <div class="heatmap-grid" id="heatmap"></div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:1rem;font-size:0.72rem;color:var(--muted)">
+          <span>Moins</span>
+          <div style="width:12px;height:12px;border-radius:2px;" class="hm-0"></div>
+          <div style="width:12px;height:12px;border-radius:2px;" class="hm-1"></div>
+          <div style="width:12px;height:12px;border-radius:2px;" class="hm-2"></div>
+          <div style="width:12px;height:12px;border-radius:2px;" class="hm-3"></div>
+          <div style="width:12px;height:12px;border-radius:2px;" class="hm-4"></div>
+          <span>Plus</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent activities -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">ACTIVITÉS RÉCENTES</span>
+        <span class="card-badge" id="act-count-badge">—</span>
+      </div>
+      <div class="activity-list" id="activity-list"></div>
+    </div>
+  </main>
+  </div><!-- end tab-overview -->
+
+  <!-- TAB: CYCLING -->
+  <div id="tab-cycling" class="tab-page">
+  <main class="dash-main">
+
+    <!-- Top bar: title + mode toggle -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px" id="cy-main-title">VÉLO — COMPARAISON</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem" id="cy-main-sub">Toutes les sorties vélo · semaine par semaine</div>
+      </div>
+      <div class="cy-mode-toggle">
+        <button class="cy-mode-btn active" onclick="setCyMode('year',this)">📅 Par semaine</button>
+        <button class="cy-mode-btn" onclick="setCyMode('monthly',this)">📆 Mois/mois</button>
+      </div>
+    </div>
+
+    <!-- YEAR MODE selectors -->
+    <div id="cy-year-panel" class="cy-selector-panel">
+      <div class="year-picker-group">
+        <div class="picker-label" id="cy-label-a">Année A</div>
+        <div class="year-chips" id="year-chips-a"></div>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="year-picker-group">
+        <div class="picker-label" id="cy-label-b">Année B</div>
+        <div class="year-chips" id="year-chips-b"></div>
+      </div>
+    </div>
+
+    <!-- Hero stats -->
+    <div class="cycling-hero" style="margin-bottom:1.5rem">
+      <div class="cycling-stat"><div class="cs-label">🚴 Sorties</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-rides-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-rides-b">—</span><span class="cs-delta neu" id="cy-rides-delta">—</span></div></div>
+      <div class="cycling-stat"><div class="cs-label">📏 Distance (km)</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-dist-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-dist-b">—</span><span class="cs-delta neu" id="cy-dist-delta">—</span></div></div>
+      <div class="cycling-stat"><div class="cs-label">⏱️ Temps</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-time-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-time-b">—</span><span class="cs-delta neu" id="cy-time-delta">—</span></div></div>
+      <div class="cycling-stat"><div class="cs-label">⛰️ Dénivelé (m)</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-elev-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-elev-b">—</span><span class="cs-delta neu" id="cy-elev-delta">—</span></div></div>
+      <div class="cycling-stat"><div class="cs-label">⚡ Vitesse moy. (km/h)</div>
+        <div class="cs-vals"><span class="cs-2026" id="cy-speed-a">—</span><span class="cs-vs">vs</span><span class="cs-2025" id="cy-speed-b">—</span><span class="cs-delta neu" id="cy-speed-delta">—</span></div></div>
+    </div>
+
+    <!-- YTD cumul banner -->
+    <div class="ytd-banner" id="ytd-banner">
+      <div class="ytd-banner-head">
+        <span class="ytd-title">📅 CUMUL DU 1er JANVIER AU <span id="ytd-date-label">—</span></span>
+        <span class="ytd-note">Même période pour chaque année sélectionnée</span>
+      </div>
+      <div class="ytd-grid" id="ytd-grid"><!-- filled by JS --></div>
+    </div>
+
+    <!-- Same week banner -->
+    <div class="ytd-banner" id="ytw-banner" style="border-color:rgba(96,165,250,0.25)">
+      <div class="ytd-banner-head">
+        <span class="ytd-title" style="color:var(--blue)">📆 SEMAINE <span id="ytw-week-label">—</span> — <span id="ytw-dates-label">—</span></span>
+        <span class="ytd-note">Même numéro de semaine pour chaque année</span>
+      </div>
+      <div class="ytd-grid" id="ytw-grid"><!-- filled by JS --></div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title" id="cy-chart-title">SEMAINE PAR SEMAINE</span>
+        <div class="metric-tabs">
+          <button class="metric-tab active" onclick="setCyclingMetric('distance',this)">Distance</button>
+          <button class="metric-tab" onclick="setCyclingMetric('time',this)">Temps</button>
+          <button class="metric-tab" onclick="setCyclingMetric('elevation',this)">Dénivelé</button>
+          <button class="metric-tab" onclick="setCyclingMetric('rides',this)">Sorties</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="compare-chart-wrap"><canvas id="cyclingCompareChart"></canvas></div>
+        <p style="font-size:0.7rem;color:var(--muted);margin-top:0.75rem;text-align:center">
+          Cliquez sur une barre pour voir les sorties correspondantes
+        </p>
+      </div>
+    </div>
+
+    <!-- Drill-down panel -->
+    <div id="drill-panel" style="display:none;margin-bottom:1.5rem">
+      <div class="card">
+        <div class="card-head" style="justify-content:space-between">
+          <span class="card-title" id="drill-title">SORTIES</span>
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <span class="card-badge" id="drill-badge">—</span>
+            <button onclick="closeDrill()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.75rem;font-family:'DM Sans',sans-serif">✕ Fermer</button>
+          </div>
+        </div>
+        <div class="activity-list" id="drill-list"></div>
+      </div>
+    </div>
+
+    <!-- Cumulative km chart -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title">📈 CUMUL KM — JOUR PAR JOUR</span>
+        <span class="card-badge" id="cumul-badge">DEPUIS LE 1er JANVIER</span>
+      </div>
+      <div class="card-body">
+        <div style="position:relative;height:260px"><canvas id="cumulChart"></canvas></div>
+        <p style="font-size:0.7rem;color:var(--muted);margin-top:0.6rem;text-align:center">Distance cumulée depuis le 1er janvier · chaque point = une journée · les mois futurs sont vides</p>
+      </div>
+    </div>
+
+    <!-- Detail table -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title" id="cy-table-title">TABLEAU PAR SEMAINE</span>
+        <span class="card-badge" id="cy-table-badge">—</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rides-table">
+          <thead><tr>
+            <th id="th-period">Sem.</th>
+            <th>Dates</th>
+            <th id="th-a-km" style="color:var(--orange)">A — km</th>
+            <th id="th-b-km" style="color:var(--blue)">B — km</th>
+            <th>Écart</th>
+            <th id="th-a-rides" style="color:var(--orange)">A — sorties</th>
+            <th id="th-b-rides" style="color:var(--blue)">B — sorties</th>
+            <th>Visuel</th>
+          </tr></thead>
+          <tbody id="cycling-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Ride lists -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title" id="cy-list-a-title">SORTIES — A</span>
+        <span class="card-badge" id="cy-a-badge">—</span>
+      </div>
+      <div class="activity-list" id="cycling-a-list"></div>
+    </div>
+    <div class="card" style="margin-bottom:2rem">
+      <div class="card-head">
+        <span class="card-title" id="cy-list-b-title">SORTIES — B</span>
+        <span class="card-badge" id="cy-b-badge">—</span>
+      </div>
+      <div class="activity-list" id="cycling-b-list"></div>
+    </div>
+
+  </main>
+  </div><!-- end tab-cycling -->
+
+  <!-- TAB: BIKE RANKING -->
+  <div id="tab-bikerank" class="tab-page">
+  <main class="dash-main">
+
+    <div class="period-bar" style="margin-bottom:1.5rem">
+      <div class="period-label">🏆 SORTIES VÉLO — PAR DISTANCE</div>
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+        <select id="bikerank-year-filter" onchange="renderBikeRankTab()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.3rem 0.75rem;font-size:0.8rem;font-family:'DM Sans',sans-serif;cursor:pointer">
+          <option value="all">Toutes années</option>
+        </select>
+        <select id="bikerank-type-filter" onchange="renderBikeRankTab()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.3rem 0.75rem;font-size:0.8rem;font-family:'DM Sans',sans-serif;cursor:pointer">
+          <option value="all">Tous types vélo</option>
+          <option value="Ride">🚴 Route</option>
+          <option value="VirtualRide">🖥️ Virtual</option>
+          <option value="GravelRide">🪨 Gravel</option>
+          <option value="MountainBikeRide">🏔️ VTT</option>
+          <option value="EBikeRide">⚡ E-Bike</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Top 3 podium -->
+    <div id="bikerank-podium" class="podium-wrap" style="margin-bottom:1.5rem"></div>
+
+    <!-- Full table -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">TOUTES LES SORTIES VÉLO</span>
+        <span class="card-badge" id="bikerank-badge">—</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rides-table">
+          <thead><tr>
+            <th style="width:2.5rem;text-align:center">#</th>
+            <th>Sortie</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th style="text-align:right">Distance</th>
+            <th style="text-align:right">Temps</th>
+            <th style="text-align:right">Vitesse</th>
+            <th style="text-align:right">Dénivelé</th>
+          </tr></thead>
+          <tbody id="bikerank-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+  </div><!-- end tab-bikerank -->
+
+  <!-- TAB: BEST ROLLING YEAR -->
+  <div id="tab-bestyear" class="tab-page">
+  <main class="dash-main">
+
+    <div class="period-bar" style="margin-bottom:1.5rem">
+      <div class="period-label">📈 MEILLEURE FENÊTRE DE 365 JOURS — VÉLO</div>
+    </div>
+
+    <!-- Hero best window -->
+    <div id="bestyear-hero" style="margin-bottom:1.5rem"></div>
+
+    <!-- All windows chart -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title">CUMUL KM POUR CHAQUE FENÊTRE DE 365 JOURS</span>
+        <span class="card-badge" id="bestyear-chart-badge">—</span>
+      </div>
+      <div class="card-body">
+        <div style="position:relative;height:280px"><canvas id="bestyearChart"></canvas></div>
+        <p style="font-size:0.7rem;color:var(--muted);margin-top:0.6rem;text-align:center">
+          Chaque point = total km cumulés sur les 365 jours se terminant à cette date · cliquez pour voir les sorties
+        </p>
+      </div>
+    </div>
+
+    <!-- Top 10 windows -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-head">
+        <span class="card-title">TOP 10 MEILLEURES FENÊTRES</span>
+        <span class="card-badge">365 JOURS</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="rides-table">
+          <thead><tr>
+            <th style="width:2.5rem;text-align:center">#</th>
+            <th>Période</th>
+            <th style="text-align:right">Distance</th>
+            <th style="text-align:right">Sorties</th>
+            <th style="text-align:right">Dénivelé</th>
+            <th style="text-align:right">Temps</th>
+          </tr></thead>
+          <tbody id="bestyear-top10"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Drill panel for best year -->
+    <div id="bestyear-drill" style="display:none;margin-bottom:2rem">
+      <div class="card">
+        <div class="card-head" style="justify-content:space-between">
+          <span class="card-title" id="bestyear-drill-title">SORTIES</span>
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <span class="card-badge" id="bestyear-drill-badge">—</span>
+            <button onclick="document.getElementById('bestyear-drill').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.75rem;font-family:'DM Sans',sans-serif">✕ Fermer</button>
+          </div>
+        </div>
+        <div class="activity-list" id="bestyear-drill-list"></div>
+      </div>
+    </div>
+
+  </main>
+  </div><!-- end tab-bestyear -->
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ─── State ─── */
+let accessToken = null;
+let allActivities = [];
+let chartInstance = null;
+let cyclingChartInstance = null;
+let currentPeriodWeeks = 4;
+let currentCyclingMetric = 'distance';
+
+/* ══════════════════════════════
+   TAB NAVIGATION
+══════════════════════════════ */
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'cycling')  initCyclingTab();
+  if (tab === 'ranking')  initRankingTab();
+  if (tab === 'bikerank') initBikeRankTab();
+  if (tab === 'bestyear') initBestYearTab();
 }
 
-// ══════════════════════════════════════════
-//  CALENDAR DATA
-// ══════════════════════════════════════════
-async function loadCalendars() {
-  showLoading('Chargement des calendriers...');
-  try {
-    const resp = await gapi.client.calendar.calendarList.list({ maxResults: 50 });
-    allCalendars = (resp.result.items || []).filter(cal => cal.summary && cal.summary.includes('@'));
-    await loadEventsForWeek();
-  } catch(e) {
-    showError('Erreur lors du chargement des calendriers : ' + e.message);
-  }
+function initBikeRankTab() {
+  const years = [...new Set(allActivities.filter(isBikeActivity).map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a);
+  const sel = document.getElementById('bikerank-year-filter');
+  while (sel.options.length > 1) sel.remove(1);
+  years.forEach(y => { const o = document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); });
+  renderBikeRankTab();
 }
 
-async function loadEventsForWeek() {
-  showLoading('Chargement des événements...');
-  const days = getWeekDays(weekOffset);
-  const timeMin = new Date(days[0]); timeMin.setHours(0,0,0,0);
-  const timeMax = new Date(days[6]); timeMax.setHours(23,59,59,999);
-
-  allEvents = {};
-  const promises = allCalendars.map(async cal => {
-    try {
-      const resp = await gapi.client.calendar.events.list({
-        calendarId: cal.id,
-        timeMin: timeMin.toISOString(),
-        timeMax: timeMax.toISOString(),
-        singleEvents: true,
-        orderBy: 'startTime',
-        maxResults: 500,
-      });
-      allEvents[cal.id] = resp.result.items || [];
-    } catch(e) {
-      allEvents[cal.id] = [];
-    }
-  });
-  await Promise.all(promises);
-  renderCalendar();
+function initRankingTab() {
+  // Populate year filter
+  const years = [...new Set(allActivities.map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a);
+  const sel = document.getElementById('rank-year-filter');
+  // Keep "Toutes années" option, rebuild the rest
+  while (sel.options.length > 1) sel.remove(1);
+  years.forEach(y => { const o = document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); });
+  renderRankingTab();
 }
 
-// ══════════════════════════════════════════
-//  NAV
-// ══════════════════════════════════════════
-document.getElementById('prev-btn')?.addEventListener('click', () => {
-  weekOffset -= 1; loadEventsForWeek();
-});
-document.getElementById('next-btn')?.addEventListener('click', () => {
-  weekOffset += 1; loadEventsForWeek();
-});
-document.getElementById('today-btn')?.addEventListener('click', () => {
-  weekOffset = 0; loadEventsForWeek();
-});
-document.getElementById('refresh-btn')?.addEventListener('click', () => {
-  loadEventsForWeek();
-});
+function renderRankingTab() {
+  const typeFilter = document.getElementById('rank-type-filter').value;
+  const yearFilter = document.getElementById('rank-year-filter').value;
 
-// ══════════════════════════════════════════
-//  RENDER
-// ══════════════════════════════════════════
-function getWeekDays(offset) {
-  const now = new Date();
-  const day = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return d;
-  });
-}
+  const typeMatch = a => {
+    if (typeFilter === 'all')  return true;
+    if (typeFilter === 'bike') return isBikeActivity(a);
+    if (typeFilter === 'run')  return ['Run','TrailRun','VirtualRun'].includes(a.type);
+    if (typeFilter === 'hike') return ['Hike','Walk'].includes(a.type);
+    if (typeFilter === 'swim') return a.type === 'Swim';
+    return true;
+  };
 
-function sameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() &&
-         a.getMonth() === b.getMonth() &&
-         a.getDate() === b.getDate();
-}
+  const sorted = allActivities
+    .filter(a => a.distance > 0 && typeMatch(a) && (yearFilter==='all' || new Date(a.start_date).getFullYear() == yearFilter))
+    .sort((a,b) => b.distance - a.distance);
 
-function isToday(d) { return sameDay(d, new Date()); }
+  document.getElementById('rank-badge').textContent = `${sorted.length} SORTIES`;
 
-function eventInDay(event, day) {
-  const start = new Date(event.start?.dateTime || event.start?.date);
-  let end = new Date(event.end?.dateTime || event.end?.date);
-  if (!event.start?.dateTime) {
-    // all-day: end is exclusive
-    end = new Date(end); end.setDate(end.getDate() - 1);
-  }
-  const dayStart = new Date(day); dayStart.setHours(0,0,0,0);
-  const dayEnd   = new Date(day); dayEnd.setHours(23,59,59,999);
-  return start <= dayEnd && end >= dayStart;
-}
-
-function fmtTime(event) {
-  if (!event.start?.dateTime) return 'Toute la journée';
-  const s = new Date(event.start.dateTime);
-  const e = new Date(event.end.dateTime);
-  return s.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) +
-    ' – ' + e.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-}
-
-function renderCalendar() {
-  const calView = document.getElementById('cal-view');
-  const days = getWeekDays(weekOffset);
-
-  // Update week label
-  const wl = document.getElementById('week-label');
-  if (wl) {
-    const opts = { day: 'numeric', month: 'short' };
-    wl.textContent = days[0].toLocaleDateString('fr-FR', opts) + ' — ' +
-                     days[6].toLocaleDateString('fr-FR', opts);
-  }
-
-  // Build legend
-  const legendItems = allCalendars.map((cal, i) => {
-    const color = cal.backgroundColor || CALENDAR_COLORS[i % CALENDAR_COLORS.length];
-    return `<span class="legend-item">
-      <span class="legend-dot" style="background:${color}"></span>
-      ${escHtml(cal.summary || cal.id)}
-    </span>`;
+  // Podium top 3
+  const medals = ['🥇','🥈','🥉'];
+  const pClasses = ['p1','p2','p3'];
+  const podium = document.getElementById('podium-wrap');
+  podium.innerHTML = sorted.slice(0,3).map((a,i) => {
+    const dist  = (a.distance/1000).toFixed(1);
+    const speed = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '';
+    const date  = new Date(a.start_date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    const stravaUrl = `https://www.strava.com/activities/${a.id}`;
+    return `
+      <div class="podium-block ${pClasses[i]}" onclick="window.open('${stravaUrl}','_blank')">
+        <span class="podium-rank">${a.type}</span>
+        <div class="podium-medal">${medals[i]}</div>
+        <div class="podium-dist" style="color:${i===0?'#f59e0b':i===1?'#9ca3af':'#b45309'}">${dist} <span style="font-size:1rem">km</span></div>
+        <div class="podium-name">${a.name}</div>
+        <div class="podium-meta">${date}${speed?' · '+speed:''}</div>
+      </div>`;
   }).join('');
 
-  // Build table
-  let html = `<div class="legend-bar">${legendItems}</div>`;
-  html += `<div class="cal-wrapper"><table class="cal-table">`;
+  // Full table
+  const maxDist = sorted[0]?.distance || 1;
+  document.getElementById('rank-table-body').innerHTML = sorted.map((a,i) => {
+    const dist   = (a.distance/1000).toFixed(1);
+    const speed  = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '—';
+    const elev   = a.total_elevation_gain ? Math.round(a.total_elevation_gain).toLocaleString()+' m' : '—';
+    const date   = new Date(a.start_date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const barW   = Math.round((a.distance/maxDist)*120);
+    const numCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const barColor = isBikeActivity(a)?'var(--orange)':['Run','TrailRun','VirtualRun'].includes(a.type)?'var(--green)':'var(--blue)';
+    const stravaUrl = `https://www.strava.com/activities/${a.id}`;
+    return `<tr class="${i<3?'rank-row-top':''}">
+      <td class="rank-num ${numCls}">${i+1}</td>
+      <td><div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:${barW}px;background:${barColor}"></div>
+        <a class="act-strava-link" href="${stravaUrl}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:600">${a.name}</a>
+      </div></td>
+      <td style="font-size:0.78rem;color:var(--muted)">${date}</td>
+      <td style="font-size:0.75rem;color:var(--muted)">${a.type}</td>
+      <td style="text-align:right;font-weight:700;color:${barColor}">${dist} km</td>
+      <td style="text-align:right;font-size:0.8rem">${fmtTime(a.moving_time)}</td>
+      <td style="text-align:right;font-size:0.8rem">${speed}</td>
+      <td style="text-align:right;font-size:0.8rem">${elev}</td>
+    </tr>`;
+  }).join('');
+}
 
-  // Header row
-  html += `<thead><tr><th class="col-person-head"></th>`;
-  for (const day of days) {
-    const todayClass = isToday(day) ? ' today-head' : '';
-    const dayName = day.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.','').toUpperCase();
-    html += `<th class="${todayClass}">
-      <div class="day-head-num">${day.getDate()}</div>
-      <div class="day-head-name">${dayName}</div>
-    </th>`;
+/* ══════════════════════════════
+   BIKE RANKING TAB
+══════════════════════════════ */
+function renderBikeRankTab() {
+  const yearFilter = document.getElementById('bikerank-year-filter').value;
+  const typeFilter = document.getElementById('bikerank-type-filter').value;
+
+  const sorted = allActivities
+    .filter(a => {
+      if (!isBikeActivity(a)) return false;
+      if (a.distance <= 0) return false;
+      if (yearFilter !== 'all' && new Date(a.start_date).getFullYear() != yearFilter) return false;
+      if (typeFilter !== 'all' && a.type !== typeFilter) return false;
+      return true;
+    })
+    .sort((a,b) => b.distance - a.distance);
+
+  document.getElementById('bikerank-badge').textContent = `${sorted.length} SORTIES`;
+
+  // Podium top 3
+  const medals  = ['🥇','🥈','🥉'];
+  const pColors = ['#f59e0b','#9ca3af','#b45309'];
+  const pClass  = ['p1','p2','p3'];
+  document.getElementById('bikerank-podium').innerHTML = sorted.slice(0,3).map((a,i) => {
+    const dist = (a.distance/1000).toFixed(1);
+    const speed = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '';
+    const date  = new Date(a.start_date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    const url   = `https://www.strava.com/activities/${a.id}`;
+    const emoji = a.type==='VirtualRide'?'🖥️':a.type==='GravelRide'?'🪨':a.type==='MountainBikeRide'?'🏔️':a.type==='EBikeRide'?'⚡':'🚴';
+    return `
+      <div class="podium-block ${pClass[i]}" onclick="window.open('${url}','_blank')" style="cursor:pointer">
+        <span class="podium-rank">${emoji} ${a.type}</span>
+        <div class="podium-medal">${medals[i]}</div>
+        <div class="podium-dist" style="color:${pColors[i]}">${dist} <span style="font-size:1rem">km</span></div>
+        <div class="podium-name">${a.name}</div>
+        <div class="podium-meta">${date}${speed?' · '+speed:''}</div>
+      </div>`;
+  }).join('');
+
+  // Full table
+  const maxDist = sorted[0]?.distance || 1;
+  document.getElementById('bikerank-body').innerHTML = sorted.map((a,i) => {
+    const dist   = (a.distance/1000).toFixed(1);
+    const speed  = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '—';
+    const elev   = a.total_elevation_gain ? Math.round(a.total_elevation_gain).toLocaleString()+' m' : '—';
+    const date   = new Date(a.start_date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const barW   = Math.round((a.distance/maxDist)*120);
+    const numCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const emoji  = a.type==='VirtualRide'?'🖥️':a.type==='GravelRide'?'🪨':a.type==='MountainBikeRide'?'🏔️':a.type==='EBikeRide'?'⚡':'🚴';
+    const url    = `https://www.strava.com/activities/${a.id}`;
+    return `<tr class="${i<3?'rank-row-top':''}">
+      <td class="rank-num ${numCls}">${i+1}</td>
+      <td><div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:${barW}px;background:var(--orange)"></div>
+        <a class="act-strava-link" href="${url}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:600">${a.name}</a>
+      </div></td>
+      <td style="font-size:0.78rem;color:var(--muted)">${date}</td>
+      <td style="font-size:0.75rem">${emoji} ${a.type}</td>
+      <td style="text-align:right;font-weight:700;color:var(--orange)">${dist} km</td>
+      <td style="text-align:right;font-size:0.8rem">${fmtTime(a.moving_time)}</td>
+      <td style="text-align:right;font-size:0.8rem">${speed}</td>
+      <td style="text-align:right;font-size:0.8rem">${elev}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══════════════════════════════
+   BEST ROLLING YEAR TAB
+══════════════════════════════ */
+let bestYearChartInstance = null;
+
+function initBestYearTab() {
+  renderBestYearTab();
+}
+
+function renderBestYearTab() {
+  // Build sorted list of bike rides with date + km
+  const rides = allActivities
+    .filter(a => isBikeActivity(a) && a.distance > 0)
+    .map(a => ({ date: new Date(a.start_date), km: a.distance / 1000, raw: a }))
+    .sort((a,b) => a.date - b.date);
+
+  if (!rides.length) {
+    document.getElementById('bestyear-hero').innerHTML =
+      `<div class="card" style="text-align:center;padding:2rem;color:var(--muted)">Aucune donnée vélo disponible.</div>`;
+    return;
   }
-  html += `</tr></thead><tbody>`;
 
-  // One row per calendar
-  allCalendars.forEach((cal, ci) => {
-    const color = cal.backgroundColor || CALENDAR_COLORS[ci % CALENDAR_COLORS.length];
-    const events = allEvents[cal.id] || [];
-    const initial = (cal.summary || '?')[0].toUpperCase();
+  const msDay = 86400000;
+  const window365 = 365 * msDay;
 
-    html += `<tr>`;
-    html += `<td class="person-cell">
-      <div class="person-inner">
-        <div class="person-avatar" style="background:${color}">${initial}</div>
-        <span class="person-name">${escHtml(cal.summary || cal.id)}</span>
-      </div>
-    </td>`;
+  // For every day that has at least one ride as end-date, compute the 365-day window ending that day
+  // Build daily buckets
+  const minDate = rides[0].date;
+  const maxDate = rides[rides.length - 1].date;
 
-    for (const day of days) {
-      const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-      const todayClass = isToday(day) ? ' today-td' : '';
-      const dayEvents = events.filter(ev => eventInDay(ev, day));
-      html += `<td class="event-td${todayClass}">`;
-      if (dayEvents.length === 0) {
-        if (!isWeekend) html += `<div class="empty-warning" title="Aucune affectation">⚠️</div>`;
-      } else {
-        for (const ev of dayEvents) {
-          const isAllDay = !ev.start?.dateTime;
-          const evColor = ev.colorId ? getEventColor(ev.colorId) : color;
-          const title = ev.summary || '(sans titre)';
-          const time = fmtTime(ev);
-          const pillClass = isAllDay ? 'event-pill event-allday' : 'event-pill';
-          html += `<div class="${pillClass}" style="background:${evColor};color:#000"
-            data-title="${escAttr(title)}"
-            data-time="${escAttr(time)}"
-            data-cal="${escAttr(cal.summary || cal.id)}"
-            onmouseenter="showTooltip(event, this)"
-            onmouseleave="hideTooltip()"
-          >${escHtml(title)}</div>`;
-        }
-      }
-      html += `</td>`;
+  // Compute rolling sum using two-pointer
+  // We'll compute for each unique end-date (each ride date)
+  const windows = [];
+  let left = 0;
+  let runningKm = 0;
+  let runningRides = 0;
+  let runningElev = 0;
+  let runningTime = 0;
+
+  for (let right = 0; right < rides.length; right++) {
+    runningKm    += rides[right].km;
+    runningRides += 1;
+    runningElev  += rides[right].raw.total_elevation_gain || 0;
+    runningTime  += rides[right].raw.moving_time || 0;
+
+    // Remove rides outside the 365-day window
+    while (rides[right].date - rides[left].date >= window365) {
+      runningKm    -= rides[left].km;
+      runningRides -= 1;
+      runningElev  -= rides[left].raw.total_elevation_gain || 0;
+      runningTime  -= rides[left].raw.moving_time || 0;
+      left++;
     }
-    html += `</tr>`;
+
+    windows.push({
+      endDate:   rides[right].date,
+      startDate: new Date(rides[right].date - window365 + msDay),
+      km:        runningKm,
+      rides:     runningRides,
+      elev:      runningElev,
+      time:      runningTime,
+      leftIdx:   left,
+      rightIdx:  right,
+    });
+  }
+
+  // Find best window
+  const best = windows.reduce((a,b) => b.km > a.km ? b : a);
+  const fmt  = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+  const fmtShort = d => d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+
+  // Hero block
+  document.getElementById('bestyear-hero').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem">
+      <div class="ytd-year-block" style="border-color:var(--orange);grid-column:1/-1;background:rgba(252,76,2,0.07)">
+        <div class="ytd-accent-bar" style="background:var(--orange)"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.4rem">🏆 MEILLEURE FENÊTRE</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.8rem;color:var(--orange);line-height:1">${best.km.toFixed(0)} <span style="font-size:1.2rem">km</span></div>
+        <div style="font-size:0.75rem;color:var(--muted);margin:0.3rem 0 0.8rem">${fmt(best.startDate)} → ${fmt(best.endDate)}</div>
+        <div class="ytd-rows">
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${best.rides}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${fmtTime(best.time)}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${Math.round(best.elev).toLocaleString()} m</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📅 Moy./semaine</span><span class="ytd-row-val">${(best.km/52).toFixed(0)} km</span></div>
+        </div>
+      </div>
+    </div>`;
+
+  // Chart: all windows by end date
+  const ctx = document.getElementById('bestyearChart').getContext('2d');
+  if (bestYearChartInstance) { bestYearChartInstance.destroy(); bestYearChartInstance = null; }
+
+  const chartLabels = windows.map(w => fmtShort(w.endDate));
+  const chartData   = windows.map(w => Math.round(w.km));
+  const bestKm      = best.km;
+
+  document.getElementById('bestyear-chart-badge').textContent = `${windows.length} FENÊTRES`;
+
+  bestYearChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: 'Cumul 365 jours (km)',
+        data: chartData,
+        borderColor: '#FC4C02',
+        backgroundColor: ctx => {
+          const gradient = ctx.chart.ctx.createLinearGradient(0,0,0,280);
+          gradient.addColorStop(0, 'rgba(252,76,2,0.25)');
+          gradient.addColorStop(1, 'rgba(252,76,2,0.01)');
+          return gradient;
+        },
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#FC4C02',
+        tension: 0.4,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e1e1e',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#f0ece6',
+          callbacks: {
+            title: items => `Fenêtre se terminant le ${windows[items[0].dataIndex].endDate.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}`,
+            label: c => `${c.raw} km cumulés sur 365 jours`,
+            afterLabel: c => {
+              const w = windows[c.dataIndex];
+              return [`Du ${fmt(w.startDate)} au ${fmt(w.endDate)}`, `${w.rides} sorties · ${fmtTime(w.time)}`];
+            }
+          }
+        },
+        annotation: {}
+      },
+      scales: {
+        x: {
+          grid: { color:'rgba(255,255,255,0.03)' },
+          ticks: { color:'rgba(240,236,230,0.35)', font:{size:9}, maxTicksLimit:18, maxRotation:0 }
+        },
+        y: {
+          grid: { color:'rgba(255,255,255,0.04)' },
+          ticks: { color:'rgba(240,236,230,0.4)', font:{size:10}, callback: v => v+' km' }
+        }
+      },
+      onClick: (evt, elements) => {
+        if (!elements.length) return;
+        const w = windows[elements[0].index];
+        const wRides = rides.slice(w.leftIdx, w.rightIdx + 1).map(r => r.raw);
+        openBestYearDrill(
+          `Fenêtre · ${fmt(w.startDate)} → ${fmt(w.endDate)}`,
+          wRides
+        );
+      }
+    }
   });
 
-  if (allCalendars.length === 0) {
-    html += `<tr><td colspan="15" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">
-      Aucun calendrier trouvé. Vérifiez vos permissions.
-    </td></tr>`;
+  // Top 10 table
+  const top10 = [...windows].sort((a,b) => b.km - a.km).slice(0, 10);
+  const maxKm = top10[0].km;
+  document.getElementById('bestyear-top10').innerHTML = top10.map((w, i) => {
+    const numCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const barW   = Math.round((w.km / maxKm) * 120);
+    return `<tr class="${i<3?'rank-row-top':''}">
+      <td class="rank-num ${numCls}">${i+1}</td>
+      <td>
+        <div class="rank-bar-wrap">
+          <div class="rank-bar" style="width:${barW}px;background:var(--orange)"></div>
+          <span style="font-size:0.8rem">${fmtShort(w.startDate)} → ${fmtShort(w.endDate)}</span>
+        </div>
+      </td>
+      <td style="text-align:right;font-weight:700;color:var(--orange)">${w.km.toFixed(0)} km</td>
+      <td style="text-align:right;font-size:0.8rem">${w.rides}</td>
+      <td style="text-align:right;font-size:0.8rem">${Math.round(w.elev).toLocaleString()} m</td>
+      <td style="text-align:right;font-size:0.8rem">${fmtTime(w.time)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openBestYearDrill(title, rideList) {
+  const sorted = [...rideList].sort((a,b) => new Date(b.start_date) - new Date(a.start_date));
+  document.getElementById('bestyear-drill-title').textContent = title.toUpperCase();
+  document.getElementById('bestyear-drill-badge').textContent = `${sorted.length} SORTIES`;
+  document.getElementById('bestyear-drill-list').innerHTML = sorted.map(a => actItemHTML(a, 'var(--orange)')).join('');
+  const panel = document.getElementById('bestyear-drill');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+/* ══════════════════════════════
+   CYCLING STATE
+══════════════════════════════ */
+let cyMode = 'year';
+let selectedYearA = null, selectedYearB = null;
+let selectedMYearA = null, selectedMonthA = null;
+let selectedMYearB = null, selectedMonthB = null;
+
+const MONTHS_FR   = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+const MONTHS_LONG = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+/* ══════════════════════════════
+   HELPERS
+══════════════════════════════ */
+function isBikeActivity(a) {
+  return ['Ride','VirtualRide','GravelRide','MountainBikeRide','EBikeRide'].includes(a.type);
+}
+
+function getISOWeek(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function getWeekStartEnd(year, week) {
+  const simple = new Date(year, 0, 1 + (week - 1) * 7);
+  const dow = simple.getDay();
+  const weekStart = new Date(simple);
+  weekStart.setDate(simple.getDate() - (dow <= 4 ? dow - 1 : dow - 8));
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  return { start: weekStart, end: weekEnd };
+}
+
+function buildWeeklyBikeData(acts, year) {
+  const rides = acts.filter(a => isBikeActivity(a) && new Date(a.start_date).getFullYear() === year);
+  const byWeek = {};
+  rides.forEach(a => {
+    const w = getISOWeek(a.start_date);
+    if (!byWeek[w]) byWeek[w] = { distance:0, time:0, elevation:0, rides:0, speedSum:0, speedCount:0 };
+    byWeek[w].distance  += (a.distance||0)/1000;
+    byWeek[w].time      += (a.moving_time||0);
+    byWeek[w].elevation += (a.total_elevation_gain||0);
+    byWeek[w].rides     += 1;
+    if (a.average_speed) { byWeek[w].speedSum += a.average_speed*3.6; byWeek[w].speedCount++; }
+  });
+  return byWeek;
+}
+
+function buildWeeklyMonthData(acts, year, month) {
+  const rides = acts.filter(a => {
+    const d = new Date(a.start_date);
+    return isBikeActivity(a) && d.getFullYear()===year && d.getMonth()===month;
+  });
+  const byWeek = {};
+  rides.forEach(a => {
+    const wm = Math.ceil(new Date(a.start_date).getDate() / 7);
+    if (!byWeek[wm]) byWeek[wm] = {distance:0,time:0,elevation:0,rides:0,speedSum:0,speedCount:0};
+    byWeek[wm].distance  += (a.distance||0)/1000;
+    byWeek[wm].time      += (a.moving_time||0);
+    byWeek[wm].elevation += (a.total_elevation_gain||0);
+    byWeek[wm].rides     += 1;
+    if (a.average_speed) { byWeek[wm].speedSum+=a.average_speed*3.6; byWeek[wm].speedCount++; }
+  });
+  return byWeek;
+}
+
+function getAvailableYears() {
+  return [...new Set(allActivities.filter(isBikeActivity).map(a=>new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a);
+}
+
+function getAvailableMonths(year) {
+  return [...new Set(allActivities.filter(a=>isBikeActivity(a)&&new Date(a.start_date).getFullYear()===year).map(a=>new Date(a.start_date).getMonth()))].sort((a,b)=>a-b);
+}
+
+function extractMetric(d) {
+  if (currentCyclingMetric==='distance')  return parseFloat(d.distance.toFixed(1));
+  if (currentCyclingMetric==='time')      return parseFloat((d.time/3600).toFixed(2));
+  if (currentCyclingMetric==='elevation') return Math.round(d.elevation);
+  return d.rides;
+}
+
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
+function initCyclingTab() {
+  const years = getAvailableYears();
+  if (!years.length) return;
+  if (!selectedYearA  || !years.includes(selectedYearA))  selectedYearA  = years[0];
+  if (!selectedYearB  || !years.includes(selectedYearB))  selectedYearB  = years.length>1?years[1]:years[0];
+  if (!selectedMYearA || !years.includes(selectedMYearA)) selectedMYearA = years[0];
+  if (!selectedMYearB || !years.includes(selectedMYearB)) selectedMYearB = years.length>1?years[1]:years[0];
+  const mA = getAvailableMonths(selectedMYearA);
+  const mB = getAvailableMonths(selectedMYearB);
+  if (selectedMonthA===null && mA.length) selectedMonthA = mA[mA.length-1];
+  if (selectedMonthB===null && mB.length) selectedMonthB = mB[mB.length-1];
+  renderCyclingControls();
+  renderCyclingTab();
+}
+
+/* ══════════════════════════════
+   MODE SWITCH
+══════════════════════════════ */
+function setCyMode(mode, btn) {
+  cyMode = mode;
+  document.querySelectorAll('.cy-mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCyclingControls();
+  renderCyclingTab();
+}
+
+function renderCyclingControls() {
+  const years = getAvailableYears();
+  buildYearChips(years);
+  document.getElementById('cy-main-sub').textContent =
+    cyMode==='year' ? 'Toutes les sorties vélo · semaine par semaine (année complète)'
+                    : 'Toutes les sorties vélo · mois par mois';
+}
+
+function buildYearChips(years) {
+  ['a','b'].forEach(s => {
+    document.getElementById(`year-chips-${s}`).innerHTML = years.map(y =>
+      `<button class="year-chip ${y===(s==='a'?selectedYearA:selectedYearB)?'active-'+s:''}" onclick="selectYear('${s}',${y})">${y}</button>`
+    ).join('');
+  });
+  document.getElementById('cy-label-a').textContent = `Année A · ${selectedYearA}`;
+  document.getElementById('cy-label-b').textContent = `Année B · ${selectedYearB}`;
+}
+
+function selectYear(side, year) {
+  if (side==='a') selectedYearA=year; else selectedYearB=year;
+  buildYearChips(getAvailableYears());
+  renderCyclingTab();
+}
+
+function buildMonthChips(years) {
+  ['a','b'].forEach(s => {
+    const selYear  = s==='a'?selectedMYearA:selectedMYearB;
+    const selMonth = s==='a'?selectedMonthA:selectedMonthB;
+    document.getElementById(`myear-chips-${s}`).innerHTML = years.map(y =>
+      `<button class="year-chip ${y===selYear?'active-'+s:''}" onclick="selectMYear('${s}',${y})">${y}</button>`
+    ).join('');
+    const avail = getAvailableMonths(selYear);
+    document.getElementById(`month-chips-${s}`).innerHTML = MONTHS_FR.map((m,i) => {
+      const has = avail.includes(i);
+      return `<button class="month-chip ${i===selMonth?'active-'+s:''}" style="${!has?'opacity:0.3;cursor:default':''}"
+                       onclick="${has?`selectMonth('${s}',${i})`:'void(0)'}">${m}</button>`;
+    }).join('');
+  });
+  document.getElementById('cy-mlabel-a').textContent = `Période A · ${MONTHS_LONG[selectedMonthA??0]} ${selectedMYearA}`;
+  document.getElementById('cy-mlabel-b').textContent = `Période B · ${MONTHS_LONG[selectedMonthB??0]} ${selectedMYearB}`;
+}
+
+function selectMYear(side, year) {
+  if (side==='a') { selectedMYearA=year; const m=getAvailableMonths(year); if(m.length&&!m.includes(selectedMonthA)) selectedMonthA=m[0]; }
+  else            { selectedMYearB=year; const m=getAvailableMonths(year); if(m.length&&!m.includes(selectedMonthB)) selectedMonthB=m[0]; }
+  buildMonthChips(getAvailableYears());
+  renderCyclingTab();
+}
+
+function selectMonth(side, month) {
+  if (side==='a') selectedMonthA=month; else selectedMonthB=month;
+  buildMonthChips(getAvailableYears());
+  renderCyclingTab();
+}
+
+/* ══════════════════════════════
+   GET PERIOD RIDES
+══════════════════════════════ */
+function getPeriodRides() {
+  return {
+    ridesA: allActivities.filter(a=>isBikeActivity(a)&&new Date(a.start_date).getFullYear()===selectedYearA),
+    ridesB: allActivities.filter(a=>isBikeActivity(a)&&new Date(a.start_date).getFullYear()===selectedYearB),
+    labelA: String(selectedYearA), labelB: String(selectedYearB),
+  };
+}
+
+/* ══════════════════════════════
+   RENDER
+══════════════════════════════ */
+function renderCyclingTab() {
+  const {ridesA,ridesB,labelA,labelB} = getPeriodRides();
+  const sum=(arr,k)=>arr.reduce((s,a)=>s+(a[k]||0),0);
+  const avgSpd=arr=>{const w=arr.filter(a=>a.average_speed);return w.length?w.reduce((s,a)=>s+a.average_speed*3.6,0)/w.length:0;};
+  const dA=sum(ridesA,'distance')/1000, dB=sum(ridesB,'distance')/1000;
+  const tA=sum(ridesA,'moving_time'),   tB=sum(ridesB,'moving_time');
+  const eA=sum(ridesA,'total_elevation_gain'), eB=sum(ridesB,'total_elevation_gain');
+  const sA=avgSpd(ridesA), sB=avgSpd(ridesB);
+
+  function setVal(ia,ib,id,vA,vB,fmt) {
+    document.getElementById(ia).textContent=fmt(vA);
+    document.getElementById(ib).textContent=fmt(vB);
+    const el=document.getElementById(id);
+    if(!vB){el.textContent='—';el.className='cs-delta neu';return;}
+    const pct=(vA-vB)/vB*100;
+    el.textContent=(pct>=0?'+':'')+pct.toFixed(0)+'%';
+    el.className=`cs-delta ${pct>0?'pos':pct<0?'neg':'neu'}`;
   }
 
-  html += `</tbody></table></div>`;
-  calView.innerHTML = html;
+  setVal('cy-rides-a','cy-rides-b','cy-rides-delta', ridesA.length,ridesB.length, v=>v);
+  setVal('cy-dist-a','cy-dist-b','cy-dist-delta',    dA,dB, v=>v.toFixed(0));
+  setVal('cy-time-a','cy-time-b','cy-time-delta',    tA,tB, v=>fmtTime(v));
+  setVal('cy-elev-a','cy-elev-b','cy-elev-delta',    eA,eB, v=>Math.round(v).toLocaleString());
+  setVal('cy-speed-a','cy-speed-b','cy-speed-delta', sA,sB, v=>v?v.toFixed(1):'—');
+
+  document.getElementById('th-a-km').textContent=`${labelA} — km`;
+  document.getElementById('th-b-km').textContent=`${labelB} — km`;
+  document.getElementById('th-a-rides').textContent=`${labelA} — sorties`;
+  document.getElementById('th-b-rides').textContent=`${labelB} — sorties`;
+  document.getElementById('cy-list-a-title').textContent=`SORTIES VÉLO · ${labelA.toUpperCase()}`;
+  document.getElementById('cy-list-b-title').textContent=`SORTIES VÉLO · ${labelB.toUpperCase()}`;
+
+  renderCyclingChart(ridesA,ridesB,labelA,labelB);
+  renderCyclingTable();
+  renderCumulChart();
+  renderYTD();
+  renderYTW();
+  renderCyclingList('cycling-a-list','cy-a-badge',ridesA,'var(--orange)');
+  renderCyclingList('cycling-b-list','cy-b-badge',ridesB,'var(--blue)');
 }
 
-// Google Calendar color IDs mapping
-const GCal_COLORS = {
-  "1":"#AC725E","2":"#D06B64","3":"#F83A22","4":"#FA573C","5":"#FF7537",
-  "6":"#FFAD46","7":"#42D692","8":"#16A765","9":"#7BD148","10":"#B3DC6C",
-  "11":"#FBE983","12":"#FAD165","13":"#92E1C0","14":"#9FE1E7","15":"#9FC6E7",
-  "16":"#4986E7","17":"#9A9CFF","18":"#B99AFF","19":"#C2C2C2","20":"#CABDBF",
-  "21":"#CCA6AC","22":"#F691B2","23":"#CD74E6","24":"#A47AE2"
-};
-
-function getEventColor(colorId) {
-  return GCal_COLORS[colorId] || '#4285F4';
+function setCyclingMetric(metric, btn) {
+  currentCyclingMetric = metric;
+  document.querySelectorAll('.metric-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const {ridesA,ridesB,labelA,labelB}=getPeriodRides();
+  renderCyclingChart(ridesA,ridesB,labelA,labelB);
 }
 
-// ══════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function escAttr(str) {
-  return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+function renderCyclingChart(ridesA, ridesB, labelA, labelB) {
+  const ctx = document.getElementById('cyclingCompareChart').getContext('2d');
+  if (cyclingChartInstance) cyclingChartInstance.destroy();
+  const unit={distance:'km',time:'h',elevation:'m',rides:'sorties'}[currentCyclingMetric];
+  let labels=[],dataA=[],dataB=[];
+
+  if (cyMode==='year') {
+    const wA=buildWeeklyBikeData(allActivities,selectedYearA);
+    const wB=buildWeeklyBikeData(allActivities,selectedYearB);
+    for(let wk=1;wk<=52;wk++){
+      labels.push(`S${wk}`);
+      dataA.push(extractMetric(wA[wk]||{distance:0,time:0,elevation:0,rides:0}));
+      dataB.push(extractMetric(wB[wk]||{distance:0,time:0,elevation:0,rides:0}));
+    }
+    document.getElementById('cy-chart-title').textContent='PAR SEMAINE (ANNÉE COMPLÈTE)';
+    document.getElementById('cy-table-title').textContent='TABLEAU PAR SEMAINE';
+  } else {
+    for(let mo=0;mo<12;mo++){
+      labels.push(MONTHS_FR[mo]);
+      const getMonthMetric = (year) => {
+        const rides = allActivities.filter(a=>{const d=new Date(a.start_date);return isBikeActivity(a)&&d.getFullYear()===year&&d.getMonth()===mo;});
+        const agg={distance:0,time:0,elevation:0,rides:rides.length};
+        rides.forEach(a=>{agg.distance+=(a.distance||0)/1000;agg.time+=(a.moving_time||0);agg.elevation+=(a.total_elevation_gain||0);});
+        return extractMetric(agg);
+      };
+      dataA.push(getMonthMetric(selectedYearA));
+      dataB.push(getMonthMetric(selectedYearB));
+    }
+    document.getElementById('cy-chart-title').textContent='MOIS PAR MOIS';
+    document.getElementById('cy-table-title').textContent='TABLEAU MOIS PAR MOIS';
+  }
+
+  cyclingChartInstance = new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:labelA,data:dataA,backgroundColor:'rgba(252,76,2,0.75)',borderColor:'#FC4C02',borderWidth:1,borderRadius:4},
+      {label:labelB,data:dataB,backgroundColor:'rgba(96,165,250,0.5)',borderColor:'#60a5fa',borderWidth:1,borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{color:'rgba(240,236,230,0.65)',font:{size:11},boxWidth:12,boxHeight:12}},
+        tooltip:{backgroundColor:'#1e1e1e',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#f0ece6',
+          callbacks:{label:c=>`${c.dataset.label}: ${c.raw} ${unit}`}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'rgba(240,236,230,0.35)',font:{size:9},maxTicksLimit:20}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,230,0.4)',font:{size:10},callback:v=>v+' '+unit}}
+      },
+      onClick:(evt, elements) => {
+        if (!elements.length) return;
+        const el       = elements[0];
+        const year     = el.datasetIndex === 0 ? selectedYearA : selectedYearB;
+        const color    = el.datasetIndex === 0 ? 'var(--orange)' : 'var(--blue)';
+        const idx      = el.index;
+
+        let rides, title;
+        if (cyMode === 'year') {
+          // idx = week number - 1 (0-based)
+          const wk = idx + 1;
+          const { start, end } = getWeekStartEnd(year, wk);
+          const endOfDay = new Date(end); endOfDay.setHours(23,59,59);
+          rides = allActivities.filter(a => {
+            if (!isBikeActivity(a)) return false;
+            const d = new Date(a.start_date);
+            return d.getFullYear() === year && d >= start && d <= endOfDay;
+          });
+          const fmt = d => d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+          title = `${year} · Semaine ${wk} (${fmt(start)} – ${fmt(end)})`;
+        } else {
+          // idx = month 0-based
+          rides = allActivities.filter(a => {
+            if (!isBikeActivity(a)) return false;
+            const d = new Date(a.start_date);
+            return d.getFullYear() === year && d.getMonth() === idx;
+          });
+          title = `${year} · ${MONTHS_LONG[idx]}`;
+        }
+        openDrill(title, rides, color);
+      }
+    }
+  });
 }
 
-function showLoading(msg) {
-  document.getElementById('cal-view').innerHTML = `
-    <div class="loading-overlay">
-      <div class="spinner"></div>
-      <div class="loading-text">${msg}</div>
+function openDrill(title, rides, color) {
+  const panel = document.getElementById('drill-panel');
+  document.getElementById('drill-title').textContent = title.toUpperCase();
+  document.getElementById('drill-title').style.color = color;
+  document.getElementById('drill-badge').textContent = `${rides.length} SORTIE${rides.length !== 1 ? 'S' : ''}`;
+
+  const sorted = [...rides].sort((a,b) => new Date(b.start_date) - new Date(a.start_date));
+  const list = document.getElementById('drill-list');
+
+  if (!sorted.length) {
+    list.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:0.85rem">Aucune sortie sur cette période.</div>`;
+  } else {
+    list.innerHTML = sorted.map(a => actItemHTML(a, color)).join('');
+  }
+
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDrill() {
+  document.getElementById('drill-panel').style.display = 'none';
+}
+
+function renderCyclingTable() {
+  let rows=[];
+
+  if (cyMode==='year') {
+    const wA=buildWeeklyBikeData(allActivities,selectedYearA);
+    const wB=buildWeeklyBikeData(allActivities,selectedYearB);
+    const allWks=new Set([...Object.keys(wA),...Object.keys(wB)].map(Number));
+    const maxWk=allWks.size?Math.max(...allWks):52;
+    const maxDist=Math.max(...[...allWks].map(w=>Math.max((wA[w]||{distance:0}).distance,(wB[w]||{distance:0}).distance)),1);
+    document.getElementById('cy-table-badge').textContent=`${maxWk} SEMAINES`;
+    document.getElementById('th-period').textContent='Sem.';
+    for(let wk=1;wk<=maxWk;wk++){
+      const {start,end}=getWeekStartEnd(selectedYearA,wk);
+      rows.push({key:`S${wk}`,dA:wA[wk]||{distance:0,rides:0},dB:wB[wk]||{distance:0,rides:0},s:start,e:end,maxDist});
+    }
+  } else {
+    document.getElementById('cy-table-badge').textContent='12 MOIS';
+    document.getElementById('th-period').textContent='Mois';
+    const getMo = (year, mo) => {
+      const rides = allActivities.filter(a=>{const d=new Date(a.start_date);return isBikeActivity(a)&&d.getFullYear()===year&&d.getMonth()===mo;});
+      const agg={distance:0,rides:rides.length};
+      rides.forEach(a=>{agg.distance+=(a.distance||0)/1000;});
+      return agg;
+    };
+    const allData = Array.from({length:12},(_,mo)=>({mo,a:getMo(selectedYearA,mo),b:getMo(selectedYearB,mo)}));
+    const maxDist = Math.max(...allData.map(d=>Math.max(d.a.distance,d.b.distance)),1);
+    for(const {mo,a,b} of allData){
+      rows.push({key:MONTHS_LONG[mo],dA:a,dB:b,
+        s:new Date(selectedYearA,mo,1),e:new Date(selectedYearA,mo+1,0),maxDist,noDateRange:true});
+    }
+  }
+
+  const fmt=d=>d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+  document.getElementById('cycling-table-body').innerHTML=rows.map(({key,dA,dB,s,e,maxDist,noDateRange})=>{
+    const diff=dA.distance-dB.distance;
+    const dc=diff>0.5?'pos':diff<-0.5?'neg':'neu';
+    const ds=diff===0?'—':(diff>0?'+':'')+diff.toFixed(0)+' km';
+    const hasAny=dA.distance>0||dB.distance>0;
+    const bA=Math.round((dA.distance/maxDist)*24),bB=Math.round((dB.distance/maxDist)*24);
+    const dateCell=noDateRange?`<span class="week-dates">${selectedYearA} vs ${selectedYearB}</span>`:`<span class="week-dates">${fmt(s)} – ${fmt(e)}</span>`;
+    return `<tr style="${!hasAny?'opacity:0.22':''}">
+      <td><span class="week-num">${key}</span></td>
+      <td>${dateCell}</td>
+      <td><span class="val-2026">${dA.distance>0?dA.distance.toFixed(1):'—'}</span></td>
+      <td><span class="val-2025">${dB.distance>0?dB.distance.toFixed(1):'—'}</span></td>
+      <td><span class="diff-pill ${dc}">${ds}</span></td>
+      <td style="text-align:center">${dA.rides||'—'}</td>
+      <td style="text-align:center">${dB.rides||'—'}</td>
+      <td><div class="mini-bar-wrap">
+        <div class="mini-bar" style="height:${bA}px;background:var(--orange)"></div>
+        <div class="mini-bar" style="height:${bB}px;background:var(--blue)"></div>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+let cumulChartInstance = null;
+
+function renderCumulChart() {
+  const ctx = document.getElementById('cumulChart').getContext('2d');
+  if (cumulChartInstance) { cumulChartInstance.destroy(); cumulChartInstance = null; }
+
+  const now    = new Date();
+  const colors = { [selectedYearA]: { line:'#FC4C02', fill:'rgba(252,76,2,0.08)' },
+                   [selectedYearB]: { line:'#60a5fa', fill:'rgba(96,165,250,0.08)' } };
+
+  // Build 365 labels as "JJ/MM" using year A as reference for day names
+  const isLeap = y => (y%4===0&&y%100!==0)||y%400===0;
+  const daysInYear = isLeap(selectedYearA) ? 366 : 365;
+
+  const labels = [];
+  for (let d=0; d<daysInYear; d++) {
+    const date = new Date(selectedYearA, 0, 1 + d);
+    labels.push(date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}));
+  }
+
+  // For each year: build daily cumulative km array (length = daysInYear)
+  const buildCumul = (year) => {
+    // Map each day-of-year index → total km on that day
+    const dailyKm = new Array(daysInYear).fill(0);
+    const yearStart = new Date(year, 0, 1);
+
+    allActivities.forEach(a => {
+      if (!isBikeActivity(a)) return;
+      const d = new Date(a.start_date);
+      if (d.getFullYear() !== year) return;
+      const dayIdx = Math.floor((d - yearStart) / 86400000);
+      if (dayIdx >= 0 && dayIdx < daysInYear) {
+        dailyKm[dayIdx] += (a.distance || 0) / 1000;
+      }
+    });
+
+    // Cumulative sum; for the current year, stop at today's day index
+    const todayIdx = year === now.getFullYear()
+      ? Math.floor((now - new Date(year,0,1)) / 86400000)
+      : daysInYear - 1;
+
+    const cumul = [];
+    let running = 0;
+    for (let i = 0; i < daysInYear; i++) {
+      if (i > todayIdx && year === now.getFullYear()) {
+        cumul.push(null); // future days = null (not drawn)
+      } else {
+        running += dailyKm[i];
+        cumul.push(Math.round(running * 10) / 10);
+      }
+    }
+    return cumul;
+  };
+
+  const years = [selectedYearA, selectedYearB].filter((y,i,a)=>y&&a.indexOf(y)===i);
+  const datasets = years.map(year => ({
+    label: String(year),
+    data: buildCumul(year),
+    borderColor: colors[year]?.line || '#FC4C02',
+    backgroundColor: colors[year]?.fill || 'transparent',
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    tension: 0.3,
+    fill: false,
+    spanGaps: false,
+  }));
+
+  // X-axis: only show 1st of each month
+  const monthTicks = [];
+  for (let m=0; m<12; m++) {
+    const d = new Date(selectedYearA, m, 1);
+    const idx = Math.floor((d - new Date(selectedYearA,0,1)) / 86400000);
+    if (idx < daysInYear) monthTicks.push(idx);
+  }
+
+  cumulChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color:'rgba(240,236,230,0.65)', font:{size:11}, boxWidth:20, boxHeight:2, usePointStyle:false }
+        },
+        tooltip: {
+          backgroundColor: '#1e1e1e',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#f0ece6',
+          callbacks: {
+            title: items => `${items[0].label}`,
+            label: c => c.raw !== null ? `${c.dataset.label} : ${c.raw} km cumulés` : null,
+            afterBody: items => {
+              const vals = items.filter(i => i.raw !== null).map(i => i.raw);
+              if (vals.length < 2) return [];
+              const ecart = vals[0] - vals[1];
+              const sign  = ecart >= 0 ? '+' : '';
+              return [`────────────────`, `Écart : ${sign}${ecart.toFixed(0)} km`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color:'rgba(255,255,255,0.03)' },
+          ticks: {
+            color: 'rgba(240,236,230,0.35)',
+            font: { size:9 },
+            maxRotation: 0,
+            callback: (val, idx) => monthTicks.includes(idx)
+              ? new Date(selectedYearA,0,1+idx).toLocaleDateString('fr-FR',{month:'short'}).toUpperCase()
+              : undefined,
+          }
+        },
+        y: {
+          grid: { color:'rgba(255,255,255,0.04)' },
+          ticks: { color:'rgba(240,236,230,0.4)', font:{size:10}, callback: v => v+' km' }
+        }
+      }
+    }
+  });
+}
+
+function renderYTD() {
+  const now    = new Date();
+  const colors = { [selectedYearA]: 'var(--orange)', [selectedYearB]: 'var(--blue)' };
+
+  const dateLabel = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+  document.getElementById('ytd-date-label').textContent = dateLabel.toUpperCase();
+
+  // Compute stats for both years
+  const getStats = year => {
+    const cutoff = new Date(year, now.getMonth(), now.getDate(), 23, 59, 59);
+    const rides = allActivities.filter(a => {
+      if (!isBikeActivity(a)) return false;
+      const d = new Date(a.start_date);
+      return d.getFullYear() === year && d <= cutoff;
+    });
+    const dist  = rides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    const time  = rides.reduce((s,a) => s + (a.moving_time||0), 0);
+    const elev  = rides.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
+    const wsArr = rides.filter(a => a.average_speed);
+    const speed = wsArr.length ? wsArr.reduce((s,a) => s + a.average_speed*3.6, 0) / wsArr.length : 0;
+    return { rides: rides.length, dist, time, elev, speed };
+  };
+
+  const sA = getStats(selectedYearA);
+  const sB = getStats(selectedYearB);
+
+  const diffBlock = selectedYearA !== selectedYearB ? diffBlockHTML(sA, sB) : '';
+
+  const yearBlock = (year, s) => {
+    const color = colors[year] || 'var(--orange)';
+    return `
+      <div class="ytd-year-block" style="border-color:${color}">
+        <div class="ytd-accent-bar" style="background:${color}"></div>
+        <div class="ytd-year-label" style="color:${color}">${year}</div>
+        <div class="ytd-rows">
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${s.rides}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${s.dist.toFixed(0)} km</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${fmtTime(s.time)}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${Math.round(s.elev).toLocaleString()} m</span></div>
+          ${s.speed ? `<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${s.speed.toFixed(1)} km/h</span></div>` : ''}
+        </div>
+      </div>`;
+  };
+
+  document.getElementById('ytd-grid').innerHTML =
+    diffBlock + yearBlock(selectedYearA, sA) + yearBlock(selectedYearB, sB);
+}
+
+/* ─── Diff block shared helper ─── */
+function diffBlockHTML(sA, sB, extraA, extraB) {
+  // extraA/extraB = optional {wDist, wRides} for week-only detail
+  const d = (a,b) => {
+    if (!b && !a) return {txt:'—', cls:'neu'};
+    const v = a - b; const s = v>0?'+':''; 
+    return { txt: s+v.toFixed(0), cls: v>0?'pos':v<0?'neg':'neu' };
+  };
+  const dPct = (a,b) => {
+    if (!b) return {txt:'—', cls:'neu'};
+    const p = (a-b)/b*100; const s = p>0?'+':'';
+    return { txt: s+p.toFixed(0)+'%', cls: p>0?'pos':p<0?'neg':'neu' };
+  };
+  const dRides = d(sA.rides, sB.rides);
+  const dDist  = d(sA.dist,  sB.dist);
+  const dElev  = d(sA.elev,  sB.elev);
+  const dSpeed = dPct(sA.speed, sB.speed);
+  const tDiff  = sA.time - sB.time;
+  const tSign  = tDiff >= 0 ? '+' : '-';
+  const tAbs   = Math.abs(tDiff);
+  const tCls   = tDiff > 0 ? 'pos' : tDiff < 0 ? 'neg' : 'neu';
+  const tTxt   = fmtTime(tAbs);
+
+  return `
+    <div class="ytd-year-block ytd-diff-block">
+      <div class="ytd-accent-bar" style="background:linear-gradient(to bottom,var(--orange),var(--blue))"></div>
+      <div class="ytd-year-label" style="color:var(--muted);font-size:0.9rem;letter-spacing:1px">ÉCART</div>
+      <div style="font-size:0.62rem;color:var(--muted);margin-bottom:0.55rem;letter-spacing:0.5px">${selectedYearA} − ${selectedYearB}</div>
+      <div class="ytd-rows">
+        <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val diff-${dRides.cls}">${dRides.txt}</span></div>
+        <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val diff-${dDist.cls}">${dDist.txt} km</span></div>
+        <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val diff-${tCls}">${tSign}${tTxt}</span></div>
+        <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val diff-${dElev.cls}">${dElev.txt} m</span></div>
+        <div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse</span><span class="ytd-row-val diff-${dSpeed.cls}">${dSpeed.txt}</span></div>
+      </div>
     </div>`;
 }
 
+function renderYTW() {
+  const now        = new Date();
+  const currentWk  = getISOWeek(now);
+  const colors     = { [selectedYearA]: 'var(--orange)', [selectedYearB]: 'var(--blue)' };
+  const fmtShort   = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+
+  const { start: ws, end: we } = getWeekStartEnd(now.getFullYear(), currentWk);
+  document.getElementById('ytw-week-label').textContent  = currentWk;
+  document.getElementById('ytw-dates-label').textContent = `${fmtShort(ws)} – ${fmtShort(we)}`.toUpperCase();
+
+  const getStats = year => {
+    const { start: weekStart, end: weekEnd } = getWeekStartEnd(year, currentWk);
+    const cutoff = new Date(weekEnd); cutoff.setHours(23,59,59);
+    const cumRides = allActivities.filter(a => {
+      if (!isBikeActivity(a)) return false;
+      const d = new Date(a.start_date);
+      return d.getFullYear() === year && d <= cutoff;
+    });
+    const weekOnly = cumRides.filter(a => new Date(a.start_date) >= weekStart);
+    const dist  = cumRides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    const time  = cumRides.reduce((s,a) => s + (a.moving_time||0), 0);
+    const elev  = cumRides.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
+    const wsArr = cumRides.filter(a => a.average_speed);
+    const speed = wsArr.length ? wsArr.reduce((s,a) => s + a.average_speed*3.6, 0) / wsArr.length : 0;
+    const wDist = weekOnly.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    return { rides: cumRides.length, dist, time, elev, speed, weekOnly, wDist, weekStart, weekEnd };
+  };
+
+  const sA = getStats(selectedYearA);
+  const sB = getStats(selectedYearB);
+
+  const yearBlock = (year, s) => {
+    const color = colors[year] || 'var(--orange)';
+    const weekRange = `${fmtShort(s.weekStart)} – ${fmtShort(s.weekEnd)}`;
+    return `
+      <div class="ytd-year-block" style="border-color:${color}">
+        <div class="ytd-accent-bar" style="background:${color}"></div>
+        <div class="ytd-year-label" style="color:${color}">${year}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.55rem;letter-spacing:0.5px">${weekRange}</div>
+        <div class="ytd-rows">
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${s.rides||'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${s.rides?s.dist.toFixed(0)+' km':'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${s.rides?fmtTime(s.time):'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${s.rides?Math.round(s.elev).toLocaleString()+' m':'—'}</span></div>
+          ${s.speed?`<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${s.speed.toFixed(1)} km/h</span></div>`:''}
+          ${s.weekOnly.length?`<div class="ytd-row" style="margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border)"><span class="ytd-row-label" style="font-style:italic">dont S${currentWk}</span><span class="ytd-row-val" style="color:${color}">${s.weekOnly.length} sortie${s.weekOnly.length>1?'s':''} · ${s.wDist.toFixed(0)} km</span></div>`:''}
+        </div>
+      </div>`;
+  };
+
+  const diffBlock = selectedYearA !== selectedYearB ? diffBlockHTML(sA, sB) : '';
+  document.getElementById('ytw-grid').innerHTML =
+    diffBlock + yearBlock(selectedYearA, sA) + yearBlock(selectedYearB, sB);
+}
+
+/* ─── Shared activity item renderer ─── */
+function actItemHTML(a, accentColor) {
+  const emoji  = a.type==='VirtualRide'?'🖥️':a.type==='GravelRide'?'🪨':'🚴';
+  const date   = new Date(a.start_date).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+  const speed  = a.average_speed ? (a.average_speed*3.6).toFixed(1)+' km/h' : '';
+  const elev   = a.total_elevation_gain ? '⛰ '+Math.round(a.total_elevation_gain)+'m' : '';
+  const hr     = a.average_heartrate ? '♥ '+Math.round(a.average_heartrate)+' bpm' : '';
+  const color  = accentColor || 'var(--orange)';
+  const stravaUrl = `https://www.strava.com/activities/${a.id}`;
+  const iconBg = color==='var(--blue)' ? 'rgba(96,165,250,0.15)' : 'rgba(252,76,2,0.15)';
+
+  return `<div class="act-item">
+    <div class="act-icon ride" style="background:${iconBg}">${emoji}</div>
+    <div class="act-info">
+      <a class="act-name act-strava-link" href="${stravaUrl}" target="_blank" rel="noopener">${a.name} <svg style="display:inline;vertical-align:middle;opacity:0.5" width="11" height="11" viewBox="0 0 24 24" fill="${color==='var(--blue)'?'#60a5fa':'#FC4C02'}"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg></a>
+      <div class="act-meta">${date} · ${a.type}${speed?' · '+speed:''}${elev?' · '+elev:''}${hr?' · '+hr:''}</div>
+    </div>
+    <div class="act-stats">
+      <div class="act-dist" style="color:${color}">${fmtDist(a.distance)} km</div>
+      <div class="act-time">${fmtTime(a.moving_time)}</div>
+    </div>
+  </div>`;
+}
+
+function renderCyclingList(containerId, badgeId, rides, accentColor) {
+  const sorted=[...rides].sort((a,b)=>new Date(b.start_date)-new Date(a.start_date));
+  document.getElementById(badgeId).textContent=`${sorted.length} SORTIES`;
+  document.getElementById(containerId).innerHTML = sorted.map(a => actItemHTML(a, accentColor)).join('');
+}
+/* ─── Auth helpers ─── */
+function getRedirectUri() {
+  return window.location.href.split('?')[0].split('#')[0];
+}
+
+function connectStrava() {
+  const clientId = document.getElementById('client-id').value.trim();
+  const clientSecret = document.getElementById('client-secret').value.trim();
+  if (!clientId || !clientSecret) {
+    showError('Veuillez entrer votre Client ID et Client Secret.');
+    return;
+  }
+  sessionStorage.setItem('strava_client_id', clientId);
+  sessionStorage.setItem('strava_client_secret', clientSecret);
+  const scope = 'read,activity:read_all';
+  const redirectUri = encodeURIComponent(getRedirectUri());
+  const url = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=${scope}`;
+  window.location.href = url;
+}
+
+async function exchangeCode(code) {
+  const clientId = sessionStorage.getItem('strava_client_id');
+  const clientSecret = sessionStorage.getItem('strava_client_secret');
+  if (!clientId || !clientSecret) {
+    showError('Session expirée. Veuillez entrer vos clés à nouveau.');
+    return;
+  }
+  const res = await fetch('https://www.strava.com/oauth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code, grant_type: 'authorization_code' })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    accessToken = data.access_token;
+    sessionStorage.setItem('strava_token', accessToken);
+    sessionStorage.setItem('strava_athlete', JSON.stringify(data.athlete));
+    return data;
+  } else {
+    throw new Error(data.message || 'Échange de token échoué');
+  }
+}
+
+function logout() {
+  sessionStorage.clear();
+  window.location.href = getRedirectUri();
+}
+
 function showError(msg) {
-  const v = document.getElementById('cal-view');
-  v.innerHTML = `<div class="error-banner">${escHtml(msg)}</div>`;
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
-// ── TOOLTIP ──
-function showTooltip(e, el) {
-  const tt = document.getElementById('tooltip');
-  document.getElementById('tt-title').textContent = el.dataset.title;
-  document.getElementById('tt-time').textContent = el.dataset.time;
-  document.getElementById('tt-cal').textContent = el.dataset.cal;
-  tt.style.display = 'block';
-  tt.style.left = Math.min(e.clientX + 12, window.innerWidth - 260) + 'px';
-  tt.style.top = (e.clientY - 10) + 'px';
+/* ─── API ─── */
+async function fetchActivities(page = 1, perPage = 100) {
+  const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${perPage}`, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  return res.json();
 }
 
-function hideTooltip() {
-  document.getElementById('tooltip').style.display = 'none';
+async function loadAllActivities() {
+  let page = 1, all = [];
+  while (true) {
+    const batch = await fetchActivities(page);
+    if (!batch.length) break;
+    all = all.concat(batch);
+    if (batch.length < 100) break;
+    page++;
+  }
+  return all;
 }
+
+/* ─── Dashboard rendering ─── */
+function showScreen(id) {
+  ['auth-screen','loading-screen','dashboard'].forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = s === id ? (id === 'loading-screen' ? 'flex' : id === 'dashboard' ? 'block' : 'flex') : 'none';
+  });
+}
+
+function setAthleteInfo(athlete) {
+  document.getElementById('athlete-name').textContent = `${athlete.firstname} ${athlete.lastname}`;
+  const av = document.getElementById('athlete-avatar');
+  if (athlete.profile_medium) {
+    const img = document.createElement('img');
+    img.src = athlete.profile_medium;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+    av.innerHTML = '';
+    av.appendChild(img);
+  }
+}
+
+function fmtTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return h > 0 ? `${h}h${m.toString().padStart(2,'0')}` : `${m}min`;
+}
+
+function fmtDist(m) { return (m / 1000).toFixed(1); }
+
+function actType(type) {
+  const map = { Run:'run', Ride:'ride', VirtualRide:'ride', Swim:'swim', Walk:'walk', Hike:'hike' };
+  return map[type] || 'other';
+}
+
+function actEmoji(type) {
+  const map = { Run:'🏃', Ride:'🚴', VirtualRide:'🚴', Swim:'🏊', Walk:'🚶', Hike:'🥾' };
+  return map[type] || '🏋️';
+}
+
+function filterByPeriod(acts, weeks) {
+  if (weeks === 9999) return acts;
+  const cutoff = Date.now() - weeks * 7 * 24 * 3600 * 1000;
+  return acts.filter(a => new Date(a.start_date).getTime() > cutoff);
+}
+
+function renderStats(acts) {
+  const totalDist = acts.reduce((s,a) => s + (a.distance||0), 0);
+  const totalTime = acts.reduce((s,a) => s + (a.moving_time||0), 0);
+  const totalElev = acts.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
+  const totalCal  = acts.reduce((s,a) => s + (a.kilojoules ? a.kilojoules * 0.239 : 0), 0);
+
+  document.getElementById('stat-activities').innerHTML = `<span>${acts.length}</span>`;
+  document.getElementById('stat-distance').innerHTML = `<span>${fmtDist(totalDist)}</span>`;
+  document.getElementById('stat-time').innerHTML = `<span>${fmtTime(totalTime)}</span>`;
+  document.getElementById('stat-elevation').innerHTML = `<span>${Math.round(totalElev).toLocaleString()}</span>`;
+  document.getElementById('stat-calories').innerHTML = `<span>${Math.round(totalCal).toLocaleString()}</span>`;
+}
+
+function renderChart(acts, weeks) {
+  const ctx = document.getElementById('distChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const numWeeks = Math.min(weeks === 9999 ? 52 : weeks, 52);
+  const labels = [], data = [];
+  for (let i = numWeeks - 1; i >= 0; i--) {
+    const weekStart = new Date(Date.now() - (i + 1) * 7 * 24 * 3600 * 1000);
+    const weekEnd   = new Date(Date.now() - i * 7 * 24 * 3600 * 1000);
+    const weekActs  = acts.filter(a => {
+      const d = new Date(a.start_date);
+      return d >= weekStart && d < weekEnd;
+    });
+    const dist = weekActs.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    const label = weekStart.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+    labels.push(label);
+    data.push(parseFloat(dist.toFixed(2)));
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: data.map(v => v > 0 ? 'rgba(252,76,2,0.6)' : 'rgba(255,255,255,0.05)'),
+        borderColor: data.map(v => v > 0 ? '#FC4C02' : 'transparent'),
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: '#1e1e1e',
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
+        titleColor: '#f0ece6',
+        bodyColor: '#FC4C02',
+        callbacks: { label: ctx => `${ctx.raw} km` }
+      }},
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(240,236,230,0.4)', font: { size: 10 }, maxTicksLimit: 8 } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(240,236,230,0.4)', font: { size: 10 }, callback: v => v + ' km' } }
+      }
+    }
+  });
+}
+
+function renderZones(acts) {
+  // Simulate HR zones from pace / HR data
+  const zones = [
+    { name: 'Zone 1 – Récupération', color: '#60a5fa', pct: 0 },
+    { name: 'Zone 2 – Aérobie', color: '#4ade80', pct: 0 },
+    { name: 'Zone 3 – Tempo', color: '#facc15', pct: 0 },
+    { name: 'Zone 4 – Seuil', color: '#fb923c', pct: 0 },
+    { name: 'Zone 5 – VO2 Max', color: '#FC4C02', pct: 0 },
+  ];
+
+  const totalTime = acts.reduce((s,a) => s + (a.moving_time||0), 0) || 1;
+  acts.forEach(a => {
+    if (!a.average_heartrate) return;
+    const hr = a.average_heartrate;
+    const t = a.moving_time || 0;
+    if (hr < 115) zones[0].pct += t;
+    else if (hr < 140) zones[1].pct += t;
+    else if (hr < 155) zones[2].pct += t;
+    else if (hr < 170) zones[3].pct += t;
+    else zones[4].pct += t;
+  });
+
+  const hasHR = zones.some(z => z.pct > 0);
+  if (!hasHR) {
+    // fake approximate distribution
+    const dist = [15, 40, 25, 14, 6];
+    dist.forEach((v,i) => zones[i].pct = v);
+  } else {
+    zones.forEach(z => z.pct = (z.pct / totalTime) * 100);
+  }
+
+  const container = document.getElementById('zone-bars');
+  container.innerHTML = zones.map(z => `
+    <div class="zone-row">
+      <div class="zone-label">
+        <span class="zone-name">${z.name}</span>
+        <span class="zone-pct" style="color:${z.color}">${Math.round(z.pct)}%</span>
+      </div>
+      <div class="zone-bar-bg">
+        <div class="zone-bar-fill" style="width:${z.pct}%;background:${z.color}"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderHeatmap(acts) {
+  const actDates = {};
+  acts.forEach(a => {
+    const d = a.start_date.substring(0,10);
+    actDates[d] = (actDates[d] || 0) + 1;
+  });
+
+  const container = document.getElementById('heatmap');
+  container.innerHTML = '';
+  const days = 364;
+  for (let i = days; i >= 0; i--) {
+    const date = new Date(Date.now() - i * 86400000);
+    const key = date.toISOString().substring(0,10);
+    const count = actDates[key] || 0;
+    const lvl = count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : count === 3 ? 3 : 4;
+    const div = document.createElement('div');
+    div.className = `hm-day hm-${lvl}`;
+    div.title = `${key}: ${count} activité${count !== 1 ? 's' : ''}`;
+    container.appendChild(div);
+  }
+}
+
+function renderActivities(acts) {
+  const recent = [...acts].sort((a,b) => new Date(b.start_date) - new Date(a.start_date)).slice(0, 20);
+  document.getElementById('act-count-badge').textContent = `${recent.length} RÉCENTES`;
+
+  const list = document.getElementById('activity-list');
+  list.innerHTML = recent.map(a => {
+    const type = actType(a.type);
+    const emoji = actEmoji(a.type);
+    const date = new Date(a.start_date).toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' });
+    const dist = fmtDist(a.distance);
+    const time = fmtTime(a.moving_time);
+    return `
+      <div class="act-item">
+        <div class="act-icon ${type}">${emoji}</div>
+        <div class="act-info">
+          <a class="act-name act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">${a.name} <svg style="display:inline;vertical-align:middle;opacity:0.5" width="11" height="11" viewBox="0 0 24 24" fill="#FC4C02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg></a>
+          <div class="act-meta">${date} · ${a.type}${a.average_heartrate ? ' · ♥ ' + Math.round(a.average_heartrate) + ' bpm' : ''}</div>
+        </div>
+        <div class="act-stats">
+          <div class="act-dist">${dist} km</div>
+          <div class="act-time">${time}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderDashboard(athlete, activities) {
+  setAthleteInfo(athlete);
+  allActivities = activities;
+  renderPeriod(currentPeriodWeeks);
+  renderHeatmap(activities);
+  renderActivities(activities);
+  showScreen('dashboard');
+}
+
+function renderPeriod(weeks) {
+  const filtered = filterByPeriod(allActivities, weeks);
+  renderStats(filtered);
+  renderChart(filtered, weeks);
+  renderZones(filtered);
+}
+
+function setPeriod(weeks, label, btn) {
+  currentPeriodWeeks = weeks;
+  document.getElementById('period-title').textContent = label;
+  document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPeriod(weeks);
+}
+
+/* ─── Demo mode ─── */
+function loadDemo() {
+  showScreen('loading-screen');
+  setTimeout(() => {
+    const athlete = { firstname: 'Demo', lastname: 'Athlete', profile_medium: null };
+    const activities = generateDemoActivities();
+    renderDashboard(athlete, activities);
+  }, 800);
+}
+
+function generateDemoActivities() {
+  const types = ['Run','Run','Run','Ride','Walk','Hike','Swim'];
+  const names = ['Sortie matinale','Interval training','Long run du dimanche','Sortie vélo','Marche récup','Trail en montagne','Natation endurance','Fartlek','Tempo run','Gravel ride'];
+  const acts = [];
+
+  // General activities last 12 months
+  for (let i = 0; i < 100; i++) {
+    const daysAgo = Math.floor(Math.random() * 365);
+    const type = types[Math.floor(Math.random() * types.length)];
+    const dist = type === 'Run' ? (4 + Math.random() * 20) * 1000
+                : type === 'Ride' ? (20 + Math.random() * 80) * 1000
+                : (2 + Math.random() * 10) * 1000;
+    const pace = type === 'Run' ? 5.5 + Math.random() * 2 : 3 + Math.random() * 1.5;
+    const movingTime = Math.round((dist / 1000) * pace * 60);
+    acts.push({
+      id: i,
+      name: names[Math.floor(Math.random() * names.length)],
+      type,
+      distance: dist,
+      moving_time: movingTime,
+      total_elevation_gain: Math.round(Math.random() * 400),
+      kilojoules: movingTime * 0.3,
+      average_heartrate: 130 + Math.round(Math.random() * 40),
+      average_speed: type === 'Ride' ? (25 + Math.random() * 15) / 3.6 : null,
+      start_date: new Date(Date.now() - daysAgo * 86400000 - Math.random() * 3600000 * 12).toISOString(),
+    });
+  }
+
+  // Dedicated cycling per year 2022–2026
+  const bikeNames = ['Sortie gravel','Montée du col','Boucle campagne','Sortie endurance','Tempo vélo','Récup pédalage','Grand fond','Intervales vélo','Tour du lac','Matinale 2 roues'];
+  const bikeYears = [
+    { year: 2022, count: 55, maxDay: 365 },
+    { year: 2023, count: 65, maxDay: 365 },
+    { year: 2024, count: 72, maxDay: 365 },
+    { year: 2025, count: 70, maxDay: 365 },
+    { year: 2026, count: 25, maxDay: 63 },
+  ];
+  let bikeId = 200;
+  bikeYears.forEach(({ year, count, maxDay }) => {
+    for (let i = 0; i < count; i++) {
+      const d = new Date(year, 0, 1);
+      d.setDate(d.getDate() + Math.floor(Math.random() * maxDay));
+      const dist = (30 + Math.random() * 100) * 1000;
+      const spd  = 28 + Math.random() * 10;
+      const mt   = Math.round((dist/1000) / spd * 3600);
+      acts.push({
+        id: bikeId++,
+        name: bikeNames[Math.floor(Math.random() * bikeNames.length)],
+        type: Math.random() > 0.2 ? 'Ride' : 'VirtualRide',
+        distance: dist,
+        moving_time: mt,
+        total_elevation_gain: Math.round(200 + Math.random() * 1500),
+        kilojoules: mt * 0.35,
+        average_heartrate: 135 + Math.round(Math.random() * 35),
+        average_speed: spd / 3.6,
+        start_date: d.toISOString(),
+      });
+    }
+  });
+
+  return acts.sort((a,b) => new Date(b.start_date) - new Date(a.start_date));
+}
+
+/* ─── Init ─── */
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const savedToken = sessionStorage.getItem('strava_token');
+  const savedAthlete = sessionStorage.getItem('strava_athlete');
+
+  if (savedToken && savedAthlete) {
+    accessToken = savedToken;
+    showScreen('loading-screen');
+    try {
+      const activities = await loadAllActivities();
+      renderDashboard(JSON.parse(savedAthlete), activities);
+    } catch (e) {
+      sessionStorage.clear();
+      showScreen('auth-screen');
+      showError('Session expirée. Veuillez vous reconnecter.');
+    }
+  } else if (code) {
+    document.getElementById('token-info').style.display = 'block';
+    window.history.replaceState({}, '', getRedirectUri());
+    showScreen('loading-screen');
+    try {
+      const data = await exchangeCode(code);
+      const activities = await loadAllActivities();
+      renderDashboard(data.athlete, activities);
+    } catch (e) {
+      showScreen('auth-screen');
+      showError('Erreur d\'authentification : ' + e.message);
+    }
+  } else {
+    showScreen('auth-screen');
+  }
+}
+
+init();
 </script>
 </body>
 </html>
