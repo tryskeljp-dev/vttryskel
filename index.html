@@ -1221,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 15/03/2026 10:05</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 08/05/2026 10:30</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1391,7 +1391,21 @@
         <span class="ytd-title" style="color:var(--blue)">📆 SEMAINE <span id="ytw-week-label">—</span> — <span id="ytw-dates-label">—</span></span>
         <span class="ytd-note">Même numéro de semaine pour chaque année</span>
       </div>
-      <div class="ytd-grid" id="ytw-grid"><!-- filled by JS --></div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:start">
+        <div class="ytd-grid" id="ytw-grid" style="grid-template-columns:repeat(3,minmax(180px,1fr))"><!-- filled by JS --></div>
+        <div id="ytw-rides-panel" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.5rem" id="ytw-rides-label-a">—</div>
+              <div class="activity-list" id="ytw-rides-a" style="max-height:320px;overflow-y:auto"></div>
+            </div>
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytw-rides-label-b">—</div>
+              <div class="activity-list" id="ytw-rides-b" style="max-height:320px;overflow-y:auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Chart -->
@@ -2624,6 +2638,27 @@ function renderYTW() {
   const diffBlock = selectedYearA !== selectedYearB ? diffBlockHTML(sA, sB) : '';
   document.getElementById('ytw-grid').innerHTML =
     diffBlock + yearBlock(selectedYearA, sA) + yearBlock(selectedYearB, sB);
+
+  // Populate week rides lists
+  const ridesA = sA.weekOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
+  const ridesB = sB.weekOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
+  const panel  = document.getElementById('ytw-rides-panel');
+
+  if (ridesA.length || ridesB.length) {
+    panel.style.display = 'block';
+    document.getElementById('ytw-rides-label-a').textContent =
+      `SORTIES S${currentWk} · ${selectedYearA} (${ridesA.length})`;
+    document.getElementById('ytw-rides-label-b').textContent =
+      `SORTIES S${currentWk} · ${selectedYearB} (${ridesB.length})`;
+    document.getElementById('ytw-rides-a').innerHTML =
+      ridesA.length ? ridesA.map(a => actItemHTML(a,'var(--orange)')).join('') :
+      `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
+    document.getElementById('ytw-rides-b').innerHTML =
+      ridesB.length ? ridesB.map(a => actItemHTML(a,'var(--blue)')).join('') :
+      `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
+  } else {
+    panel.style.display = 'none';
+  }
 }
 
 /* ─── Shared activity item renderer ─── */
