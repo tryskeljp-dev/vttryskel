@@ -1221,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 08/05/2026 10:45</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 08/05/2026 11:00</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1390,6 +1390,11 @@
       <div class="ytd-banner-head">
         <span class="ytd-title" style="color:var(--blue)">📆 SEMAINE <span id="ytw-week-label">—</span> — <span id="ytw-dates-label">—</span></span>
         <span class="ytd-note">Même numéro de semaine pour chaque année</span>
+        <div style="display:flex;gap:0.4rem;margin-left:auto">
+          <button onclick="shiftWeek(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.25rem 0.8rem;cursor:pointer;font-size:0.8rem;font-family:'DM Sans',sans-serif">◀ Préc.</button>
+          <button onclick="shiftWeek(0)"  style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.25rem 0.8rem;cursor:pointer;font-size:0.8rem;font-family:'DM Sans',sans-serif">Aujourd'hui</button>
+          <button onclick="shiftWeek(+1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.25rem 0.8rem;cursor:pointer;font-size:0.8rem;font-family:'DM Sans',sans-serif">Suiv. ▶</button>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:start">
         <div class="ytd-grid" id="ytw-grid" style="grid-template-columns:repeat(3,minmax(180px,1fr))"><!-- filled by JS --></div>
@@ -1619,6 +1624,7 @@ let chartInstance = null;
 let cyclingChartInstance = null;
 let currentPeriodWeeks = 4;
 let currentCyclingMetric = 'distance';
+let weekOffset = 0; // 0 = current week, -1 = previous, +1 = next
 
 /* ══════════════════════════════
    TAB NAVIGATION
@@ -2585,23 +2591,38 @@ function diffBlockHTML(sA, sB, extraA, extraB) {
     </div>`;
 }
 
+function shiftWeek(delta) {
+  if (delta === 0) weekOffset = 0;
+  else weekOffset += delta;
+  renderYTW();
+}
+
 function renderYTW() {
   const now        = new Date();
-  const currentWk  = getISOWeek(now);
+  // Apply weekOffset: shift by N weeks
+  const refDate    = new Date(now.getTime() + weekOffset * 7 * 86400000);
+  const currentWk  = getISOWeek(refDate);
+  const refYear    = refDate.getFullYear();
   const colors     = { [selectedYearA]: 'var(--orange)', [selectedYearB]: 'var(--blue)' };
   const fmtShort   = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
 
-  const { start: ws, end: we } = getWeekStartEnd(now.getFullYear(), currentWk);
+  const { start: ws, end: we } = getWeekStartEnd(refYear, currentWk);
   document.getElementById('ytw-week-label').textContent  = currentWk;
   document.getElementById('ytw-dates-label').textContent = `${fmtShort(ws)} – ${fmtShort(we)}`.toUpperCase();
+
+  // Highlight "Aujourd'hui" button only when on current week
+  const todayBtn = document.querySelector('[onclick="shiftWeek(0)"]');
+  if (todayBtn) todayBtn.style.color = weekOffset === 0 ? 'var(--orange)' : 'var(--muted)';
 
   const getStats = year => {
     const { start: weekStart, end: weekEnd } = getWeekStartEnd(year, currentWk);
     const cutoff = new Date(weekEnd); cutoff.setHours(23,59,59);
+    // For cumul: use cutoff relative to the selected week (not today)
+    const cumCutoff = cutoff;
     const cumRides = allActivities.filter(a => {
       if (!isBikeActivity(a)) return false;
       const d = new Date(a.start_date);
-      return d.getFullYear() === year && d <= cutoff;
+      return d.getFullYear() === year && d <= cumCutoff;
     });
     const weekOnly = cumRides.filter(a => new Date(a.start_date) >= weekStart);
     const dist  = cumRides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
