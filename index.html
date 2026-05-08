@@ -1221,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 08/05/2026 11:10</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 08/05/2026 11:15</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1453,7 +1453,7 @@
         <span class="card-badge" id="cumul-badge">DEPUIS LE 1er JANVIER</span>
       </div>
       <div class="card-body">
-        <div style="position:relative;height:260px"><canvas id="cumulChart"></canvas></div>
+        <div style="position:relative;height:520px"><canvas id="cumulChart"></canvas></div>
         <p style="font-size:0.7rem;color:var(--muted);margin-top:0.6rem;text-align:center">Distance cumulée depuis le 1er janvier · chaque point = une journée · les mois futurs sont vides</p>
       </div>
     </div>
@@ -2498,7 +2498,6 @@ function renderCumulChart() {
         },
         y: {
           grid: { color:'rgba(255,255,255,0.04)' },
-          suggestedMax: Math.max(...chartData.filter(v => v !== null), 1) * 2,
           ticks: { color:'rgba(240,236,230,0.4)', font:{size:10}, callback: v => v+' km' }
         }
       }
