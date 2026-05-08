@@ -1221,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 08/05/2026 11:00</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 08/05/2026 11:10</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -2498,6 +2498,7 @@ function renderCumulChart() {
         },
         y: {
           grid: { color:'rgba(255,255,255,0.04)' },
+          suggestedMax: Math.max(...chartData.filter(v => v !== null), 1) * 2,
           ticks: { color:'rgba(240,236,230,0.4)', font:{size:10}, callback: v => v+' km' }
         }
       }
