@@ -1221,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 08/05/2026 11:15</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 10/05/2026 09:30</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -2104,6 +2104,10 @@ function renderCyclingControls() {
   document.getElementById('cy-main-sub').textContent =
     cyMode==='year' ? 'Toutes les sorties vélo · semaine par semaine (année complète)'
                     : 'Toutes les sorties vélo · mois par mois';
+
+  // Show YTW banner only in week mode; show YTD always
+  const ytwBanner = document.getElementById('ytw-banner');
+  if (ytwBanner) ytwBanner.style.display = cyMode === 'year' ? '' : 'none';
 }
 
 function buildYearChips(years) {
