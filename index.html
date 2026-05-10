@@ -1221,7 +1221,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 10/05/2026 09:30</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 10/05/2026 10:00</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1407,6 +1407,36 @@
             <div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytw-rides-label-b">—</div>
               <div class="activity-list" id="ytw-rides-b"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- MONTHLY DETAIL BANNER (mode mois/mois) -->
+    <div class="ytd-banner" id="ytm-banner" style="border-color:rgba(96,165,250,0.25);display:none">
+      <div class="ytd-banner-head">
+        <span class="ytd-title" style="color:var(--blue)">📆 <span id="ytm-month-label">—</span></span>
+        <span class="ytd-note">Même mois pour chaque année sélectionnée</span>
+        <div style="display:flex;gap:0.4rem;margin-left:auto">
+          <button onclick="shiftMonth(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.25rem 0.8rem;cursor:pointer;font-size:0.8rem;font-family:'DM Sans',sans-serif">◀ Préc.</button>
+          <button onclick="shiftMonth(0)"  style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.25rem 0.8rem;cursor:pointer;font-size:0.8rem;font-family:'DM Sans',sans-serif">Ce mois</button>
+          <button onclick="shiftMonth(+1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.25rem 0.8rem;cursor:pointer;font-size:0.8rem;font-family:'DM Sans',sans-serif">Suiv. ▶</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:start">
+        <div class="ytd-grid" id="ytm-grid" style="grid-template-columns:repeat(3,minmax(180px,1fr))"><!-- filled by JS --></div>
+        <div id="ytm-rides-panel" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.5rem" id="ytm-rides-label-a">—</div>
+              <div class="activity-list" id="ytm-rides-a"></div>
+            </div>
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytm-rides-label-b">—</div>
+              <div class="activity-list" id="ytm-rides-b"></div>
             </div>
           </div>
         </div>
@@ -1625,6 +1655,7 @@ let cyclingChartInstance = null;
 let currentPeriodWeeks = 4;
 let currentCyclingMetric = 'distance';
 let weekOffset = 0; // 0 = current week, -1 = previous, +1 = next
+let monthOffset = 0; // 0 = current month
 
 /* ══════════════════════════════
    TAB NAVIGATION
@@ -2105,9 +2136,11 @@ function renderCyclingControls() {
     cyMode==='year' ? 'Toutes les sorties vélo · semaine par semaine (année complète)'
                     : 'Toutes les sorties vélo · mois par mois';
 
-  // Show YTW banner only in week mode; show YTD always
+  // Show YTW in week mode, YTM in month mode
   const ytwBanner = document.getElementById('ytw-banner');
-  if (ytwBanner) ytwBanner.style.display = cyMode === 'year' ? '' : 'none';
+  const ytmBanner = document.getElementById('ytm-banner');
+  if (ytwBanner) ytwBanner.style.display = cyMode === 'year'    ? '' : 'none';
+  if (ytmBanner) ytmBanner.style.display = cyMode === 'monthly' ? '' : 'none';
 }
 
 function buildYearChips(years) {
@@ -2208,6 +2241,7 @@ function renderCyclingTab() {
   renderCumulChart();
   renderYTD();
   renderYTW();
+  renderYTM();
   renderCyclingList('cycling-a-list','cy-a-badge',ridesA,'var(--orange)');
   renderCyclingList('cycling-b-list','cy-b-badge',ridesB,'var(--blue)');
 }
@@ -2599,6 +2633,102 @@ function shiftWeek(delta) {
   if (delta === 0) weekOffset = 0;
   else weekOffset += delta;
   renderYTW();
+}
+
+function shiftMonth(delta) {
+  if (delta === 0) monthOffset = 0;
+  else monthOffset += delta;
+  renderYTM();
+}
+
+const MONTHS_LONG_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+function renderYTM() {
+  const now       = new Date();
+  const refDate   = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const refMonth  = refDate.getMonth();   // 0-indexed
+  const refYear   = refDate.getFullYear();
+
+  // Label
+  document.getElementById('ytm-month-label').textContent =
+    `${MONTHS_LONG_FR[refMonth].toUpperCase()} (MOIS ${refMonth+1})`;
+
+  // "Ce mois" button highlight
+  const todayBtn = document.querySelector('[onclick="shiftMonth(0)"]');
+  if (todayBtn) todayBtn.style.color = monthOffset === 0 ? 'var(--orange)' : 'var(--muted)';
+
+  const fmtShort = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+  const colors   = { [selectedYearA]: 'var(--orange)', [selectedYearB]: 'var(--blue)' };
+
+  const getStats = year => {
+    const monthStart = new Date(year, refMonth, 1);
+    const monthEnd   = new Date(year, refMonth + 1, 0, 23, 59, 59);
+    // Cumul Jan→end of refMonth in that year
+    const cumCutoff  = monthEnd;
+    const cumRides   = allActivities.filter(a => {
+      if (!isBikeActivity(a)) return false;
+      const d = new Date(a.start_date);
+      return d.getFullYear() === year && d <= cumCutoff;
+    });
+    const monthOnly  = cumRides.filter(a => {
+      const d = new Date(a.start_date);
+      return d >= monthStart && d <= monthEnd;
+    });
+    const dist  = cumRides.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    const time  = cumRides.reduce((s,a) => s + (a.moving_time||0), 0);
+    const elev  = cumRides.reduce((s,a) => s + (a.total_elevation_gain||0), 0);
+    const wsArr = cumRides.filter(a => a.average_speed);
+    const speed = wsArr.length ? wsArr.reduce((s,a) => s + a.average_speed*3.6, 0) / wsArr.length : 0;
+    const mDist = monthOnly.reduce((s,a) => s + (a.distance||0), 0) / 1000;
+    return { rides: cumRides.length, dist, time, elev, speed, monthOnly, mDist, monthStart, monthEnd };
+  };
+
+  const sA = getStats(selectedYearA);
+  const sB = getStats(selectedYearB);
+
+  const yearBlock = (year, s) => {
+    const color      = colors[year] || 'var(--orange)';
+    const monthLabel = `${fmtShort(s.monthStart)} – ${fmtShort(s.monthEnd)}`;
+    return `
+      <div class="ytd-year-block" style="border-color:${color}">
+        <div class="ytd-accent-bar" style="background:${color}"></div>
+        <div class="ytd-year-label" style="color:${color}">${year}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.55rem;letter-spacing:0.5px">${monthLabel}</div>
+        <div class="ytd-rows">
+          <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${s.rides||'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${s.rides?s.dist.toFixed(0)+' km':'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${s.rides?fmtTime(s.time):'—'}</span></div>
+          <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${s.rides?Math.round(s.elev).toLocaleString()+' m':'—'}</span></div>
+          ${s.speed?`<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${s.speed.toFixed(1)} km/h</span></div>`:''}
+          ${s.monthOnly.length?`<div class="ytd-row" style="margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border)"><span class="ytd-row-label" style="font-style:italic">dont ${MONTHS_LONG_FR[refMonth]}</span><span class="ytd-row-val" style="color:${color}">${s.monthOnly.length} sortie${s.monthOnly.length>1?'s':''} · ${s.mDist.toFixed(0)} km</span></div>`:''}
+        </div>
+      </div>`;
+  };
+
+  const diffBlock = selectedYearA !== selectedYearB ? diffBlockHTML(sA, sB) : '';
+  document.getElementById('ytm-grid').innerHTML =
+    diffBlock + yearBlock(selectedYearA, sA) + yearBlock(selectedYearB, sB);
+
+  // Rides list for this month
+  const ridesA = sA.monthOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
+  const ridesB = sB.monthOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
+  const panel  = document.getElementById('ytm-rides-panel');
+
+  if (ridesA.length || ridesB.length) {
+    panel.style.display = 'block';
+    document.getElementById('ytm-rides-label-a').textContent =
+      `${MONTHS_LONG_FR[refMonth].toUpperCase()} · ${selectedYearA} (${ridesA.length})`;
+    document.getElementById('ytm-rides-label-b').textContent =
+      `${MONTHS_LONG_FR[refMonth].toUpperCase()} · ${selectedYearB} (${ridesB.length})`;
+    document.getElementById('ytm-rides-a').innerHTML =
+      ridesA.length ? ridesA.map(a => actItemHTML(a,'var(--orange)')).join('') :
+      `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
+    document.getElementById('ytm-rides-b').innerHTML =
+      ridesB.length ? ridesB.map(a => actItemHTML(a,'var(--blue)')).join('') :
+      `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
+  } else {
+    panel.style.display = 'none';
+  }
 }
 
 function renderYTW() {
