@@ -840,7 +840,12 @@
   .ytd-row-label { color: var(--muted); }
   .ytd-row-val   { font-weight: 600; }
 
-  .ytd-accent-bar {
+  .ytd-inner-wrap {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
     position: absolute;
     top: 0; left: 0;
     width: 4px; height: 100%;
@@ -1154,13 +1159,70 @@
   /* responsive */
   @media (max-width: 768px) {
     .dash-header { padding: 1rem; }
-    .dash-main { padding: 1rem; }
+    .dash-main { padding: 0.75rem; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .heatmap-grid { grid-template-columns: repeat(26, 1fr); }
-    .dash-nav { padding: 0 1rem; overflow-x: auto; }
-    .nav-tab { white-space: nowrap; padding: 0.85rem 1rem; }
+    .dash-nav { padding: 0 0.75rem; overflow-x: auto; }
+    .nav-tab { white-space: nowrap; padding: 0.85rem 0.85rem; font-size: 0.78rem; }
     .rides-table { font-size: 0.75rem; }
     .rides-table th, .rides-table td { padding: 0.6rem 0.5rem; }
+
+    /* YTD/YTW/YTM grids: stack vertically on mobile */
+    .ytd-grid {
+      grid-template-columns: 1fr !important;
+      width: 100%;
+    }
+
+    /* Banner inner layout: stack grid and rides panel */
+    .ytd-inner-wrap {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* Rides panel: single column on mobile */
+    #ytw-rides-panel > div,
+    #ytm-rides-panel > div {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* Banner head: wrap nav buttons below title */
+    .ytd-banner-head {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .ytd-banner-head > div[style*="margin-left:auto"] {
+      margin-left: 0 !important;
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Hero stats: 2 cols on mobile */
+    .cycling-hero {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Period bar: wrap */
+    .period-bar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    /* Cycling selector panel */
+    .cy-selector-panel {
+      flex-direction: column !important;
+      gap: 0.75rem !important;
+    }
+
+    /* YTD year blocks min-width */
+    .ytd-year-block {
+      min-width: 0 !important;
+    }
+
+    /* Cumul chart height reduced on mobile */
+    #cumulChart { height: 260px !important; }
+
+    /* Best year chart */
+    #bestyearChart { height: 200px !important; }
   }
 </style>
 </head>
@@ -1221,7 +1283,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 10/05/2026 10:00</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 11/05/2026 08:00</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1396,7 +1458,7 @@
           <button onclick="shiftWeek(+1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.25rem 0.8rem;cursor:pointer;font-size:0.8rem;font-family:'DM Sans',sans-serif">Suiv. ▶</button>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:start">
+      <div class="ytd-inner-wrap">
         <div class="ytd-grid" id="ytw-grid" style="grid-template-columns:repeat(3,minmax(180px,1fr))"><!-- filled by JS --></div>
         <div id="ytw-rides-panel" style="display:none">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
@@ -1426,7 +1488,7 @@
           <button onclick="shiftMonth(+1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0.25rem 0.8rem;cursor:pointer;font-size:0.8rem;font-family:'DM Sans',sans-serif">Suiv. ▶</button>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:start">
+      <div class="ytd-inner-wrap">
         <div class="ytd-grid" id="ytm-grid" style="grid-template-columns:repeat(3,minmax(180px,1fr))"><!-- filled by JS --></div>
         <div id="ytm-rides-panel" style="display:none">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
