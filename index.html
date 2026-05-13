@@ -846,10 +846,10 @@
   .ytd-row-val   { font-weight: 600; }
 
   .ytd-inner-wrap {
-    display: grid;
-    grid-template-columns: auto 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 1.25rem;
-    align-items: start;
+    align-items: stretch;
   }
 
   /* Force the 3-card YTW/YTM grid to equal columns */
@@ -1184,8 +1184,9 @@
       width: 100%;
     }
 
-    /* Banner inner layout: stack grid and rides panel */
-    .ytd-inner-wrap {
+    /* Unified 5-col grid: stack to 1 col on mobile */
+    #ytw-unified-grid,
+    #ytm-unified-grid {
       grid-template-columns: 1fr !important;
     }
 
@@ -1294,7 +1295,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 11/05/2026 09:00</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 11/05/2026 09:30</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1470,17 +1471,17 @@
         </div>
       </div>
       <div class="ytd-inner-wrap">
-        <div class="ytd-grid" id="ytw-grid" style="grid-template-columns:repeat(3,minmax(180px,1fr))"><!-- filled by JS --></div>
-        <div id="ytw-rides-panel" style="display:none">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-            <div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.5rem" id="ytw-rides-label-a">—</div>
-              <div class="activity-list" id="ytw-rides-a"></div>
-            </div>
-            <div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytw-rides-label-b">—</div>
-              <div class="activity-list" id="ytw-rides-b"></div>
-            </div>
+        <div id="ytw-unified-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;align-items:stretch;width:100%">
+          <!-- cards injected by JS in ytw-grid-inner -->
+          <div id="ytw-grid" style="display:contents"></div>
+          <!-- rides columns -->
+          <div id="ytw-rides-col-a" style="display:none">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.5rem" id="ytw-rides-label-a">—</div>
+            <div class="activity-list" id="ytw-rides-a"></div>
+          </div>
+          <div id="ytw-rides-col-b" style="display:none">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytw-rides-label-b">—</div>
+            <div class="activity-list" id="ytw-rides-b"></div>
           </div>
         </div>
       </div>
@@ -1500,17 +1501,15 @@
         </div>
       </div>
       <div class="ytd-inner-wrap">
-        <div class="ytd-grid" id="ytm-grid" style="grid-template-columns:repeat(3,minmax(180px,1fr))"><!-- filled by JS --></div>
-        <div id="ytm-rides-panel" style="display:none">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-            <div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.5rem" id="ytm-rides-label-a">—</div>
-              <div class="activity-list" id="ytm-rides-a"></div>
-            </div>
-            <div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytm-rides-label-b">—</div>
-              <div class="activity-list" id="ytm-rides-b"></div>
-            </div>
+        <div id="ytm-unified-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;align-items:stretch;width:100%">
+          <div id="ytm-grid" style="display:contents"></div>
+          <div id="ytm-rides-col-a" style="display:none">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.5rem" id="ytm-rides-label-a">—</div>
+            <div class="activity-list" id="ytm-rides-a"></div>
+          </div>
+          <div id="ytm-rides-col-b" style="display:none">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytm-rides-label-b">—</div>
+            <div class="activity-list" id="ytm-rides-b"></div>
           </div>
         </div>
       </div>
@@ -2785,10 +2784,12 @@ function renderYTM() {
   // Rides list for this month
   const ridesA = sA.monthOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
   const ridesB = sB.monthOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
-  const panel  = document.getElementById('ytm-rides-panel');
+  const colA = document.getElementById('ytm-rides-col-a');
+  const colB = document.getElementById('ytm-rides-col-b');
 
   if (ridesA.length || ridesB.length) {
-    panel.style.display = 'block';
+    colA.style.display = 'block';
+    colB.style.display = 'block';
     document.getElementById('ytm-rides-label-a').textContent =
       `${MONTHS_LONG_FR[refMonth].toUpperCase()} · ${selectedYearA} (${ridesA.length})`;
     document.getElementById('ytm-rides-label-b').textContent =
@@ -2800,7 +2801,8 @@ function renderYTM() {
       ridesB.length ? ridesB.map(a => actItemHTML(a,'var(--blue)')).join('') :
       `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
   } else {
-    panel.style.display = 'none';
+    colA.style.display = 'none';
+    colB.style.display = 'none';
   }
 }
 
@@ -2870,10 +2872,12 @@ function renderYTW() {
   // Populate week rides lists
   const ridesA = sA.weekOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
   const ridesB = sB.weekOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
-  const panel  = document.getElementById('ytw-rides-panel');
+  const colA = document.getElementById('ytw-rides-col-a');
+  const colB = document.getElementById('ytw-rides-col-b');
 
   if (ridesA.length || ridesB.length) {
-    panel.style.display = 'block';
+    colA.style.display = 'block';
+    colB.style.display = 'block';
     document.getElementById('ytw-rides-label-a').textContent =
       `SORTIES S${currentWk} · ${selectedYearA} (${ridesA.length})`;
     document.getElementById('ytw-rides-label-b').textContent =
@@ -2885,7 +2889,8 @@ function renderYTW() {
       ridesB.length ? ridesB.map(a => actItemHTML(a,'var(--blue)')).join('') :
       `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
   } else {
-    panel.style.display = 'none';
+    colA.style.display = 'none';
+    colB.style.display = 'none';
   }
 }
 
