@@ -512,6 +512,26 @@
     cursor: pointer;
   }
 
+  /* Compact one-liner for ytw/ytm columns */
+  .act-item-compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: background 0.15s;
+    min-width: 0;
+  }
+  .act-item-compact:last-child { border-bottom: none; }
+  .act-item-compact:hover { background: rgba(255,255,255,0.04); }
+  .act-item-compact .aic-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .act-item-compact .aic-date { color: var(--muted); white-space: nowrap; font-size: 0.7rem; }
+  .act-item-compact .aic-dist { font-weight: 700; white-space: nowrap; text-align: right; min-width: 3.5rem; }
+  .act-item-compact .aic-time { color: var(--muted); white-space: nowrap; text-align: right; min-width: 2.5rem; font-size: 0.7rem; }
+
   .act-item:last-child { border-bottom: none; }
   .act-item:hover { background: var(--surface2); }
 
@@ -1295,7 +1315,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 14/05/2026 09:00</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 14/05/2026 09:30</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -2801,10 +2821,10 @@ function renderYTM() {
     document.getElementById('ytm-rides-label-b').textContent =
       `${MONTHS_LONG_FR[refMonth].toUpperCase()} · ${selectedYearB} (${ridesB.length})`;
     document.getElementById('ytm-rides-a').innerHTML =
-      ridesA.length ? ridesA.map(a => actItemHTML(a,'var(--orange)')).join('') :
+      ridesA.length ? ridesA.map(a => actItemCompactHTML(a,'var(--orange)')).join('') :
       `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
     document.getElementById('ytm-rides-b').innerHTML =
-      ridesB.length ? ridesB.map(a => actItemHTML(a,'var(--blue)')).join('') :
+      ridesB.length ? ridesB.map(a => actItemCompactHTML(a,'var(--blue)')).join('') :
       `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
   } else {
     colA.style.display = 'none';
@@ -2945,10 +2965,10 @@ function renderYTW() {
     document.getElementById('ytw-rides-label-b').textContent =
       `SORTIES S${currentWk} · ${selectedYearB} (${ridesB.length})`;
     document.getElementById('ytw-rides-a').innerHTML =
-      ridesA.length ? ridesA.map(a => actItemHTML(a,'var(--orange)')).join('') :
+      ridesA.length ? ridesA.map(a => actItemCompactHTML(a,'var(--orange)')).join('') :
       `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
     document.getElementById('ytw-rides-b').innerHTML =
-      ridesB.length ? ridesB.map(a => actItemHTML(a,'var(--blue)')).join('') :
+      ridesB.length ? ridesB.map(a => actItemCompactHTML(a,'var(--blue)')).join('') :
       `<div style="color:var(--muted);font-size:0.78rem;padding:0.5rem">Aucune sortie</div>`;
   } else {
     colA.style.display = 'none';
@@ -2957,6 +2977,24 @@ function renderYTW() {
 }
 
 /* ─── Shared activity item renderer ─── */
+function actItemCompactHTML(a, accentColor) {
+  const color = accentColor || 'var(--orange)';
+  const date  = new Date(a.start_date).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+  const elev  = a.total_elevation_gain ? ` · ⛰ ${Math.round(a.total_elevation_gain)}m` : '';
+  const speed = a.average_speed ? ` · ${(a.average_speed*3.6).toFixed(1)} km/h` : '';
+  const url   = `https://www.strava.com/activities/${a.id}`;
+  return `<div class="act-item-compact" onclick="window.open('${url}','_blank')">
+    <div style="display:flex;flex-direction:column;flex:1;min-width:0;gap:0.1rem">
+      <span class="aic-name">${a.name}</span>
+      <span class="aic-date">${date}${speed}${elev}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.1rem;flex-shrink:0">
+      <span class="aic-dist" style="color:${color}">${fmtDist(a.distance)} km</span>
+      <span class="aic-time">${fmtTime(a.moving_time)}</span>
+    </div>
+  </div>`;
+}
+
 function actItemHTML(a, accentColor) {
   const emoji  = a.type==='VirtualRide'?'🖥️':a.type==='GravelRide'?'🪨':'🚴';
   const date   = new Date(a.start_date).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
