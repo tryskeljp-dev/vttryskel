@@ -1295,7 +1295,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 14/05/2026 08:00</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 14/05/2026 09:00</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -2810,6 +2810,48 @@ function renderYTM() {
     colA.style.display = 'none';
     colB.style.display = 'none';
   }
+}
+
+function diffBlockInnerHTML(sA, sB) {
+  const d = (a,b) => { const v=a-b; return { txt:(v>0?'+':'')+v.toFixed(0), cls:v>0?'pos':v<0?'neg':'neu' }; };
+  const dPct = (a,b) => { if(!b) return {txt:'—',cls:'neu'}; const p=(a-b)/b*100; return { txt:(p>0?'+':'')+p.toFixed(0)+'%', cls:p>0?'pos':p<0?'neg':'neu' }; };
+  const dr=d(sA.rides,sB.rides), dd=d(sA.dist,sB.dist), de=d(sA.elev,sB.elev), ds=dPct(sA.speed,sB.speed);
+  const tDiff=sA.time-sB.time, tSign=tDiff>=0?'+':'-', tCls=tDiff>0?'pos':tDiff<0?'neg':'neu';
+  return `
+    <div class="ytd-accent-bar" style="background:linear-gradient(to bottom,var(--orange),var(--blue))"></div>
+    <div class="ytd-year-label" style="color:var(--muted);font-size:0.9rem;letter-spacing:1px">ÉCART</div>
+    <div style="font-size:0.62rem;color:var(--muted);margin-bottom:0.55rem;letter-spacing:0.5px">${selectedYearA} − ${selectedYearB}</div>
+    <div class="ytd-rows">
+      <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val diff-${dr.cls}">${dr.txt}</span></div>
+      <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val diff-${dd.cls}">${dd.txt} km</span></div>
+      <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val diff-${tCls}">${tSign}${fmtTime(Math.abs(sA.time-sB.time))}</span></div>
+      <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val diff-${de.cls}">${de.txt} m</span></div>
+      <div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse</span><span class="ytd-row-val diff-${ds.cls}">${ds.txt}</span></div>
+    </div>`;
+}
+
+function yearCardInner(year, s, color, weekOrMonth) {
+  const fmtShort = d => d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+  const range = s.weekStart
+    ? `${fmtShort(s.weekStart)} – ${fmtShort(s.weekEnd)}`
+    : s.monthStart ? `${fmtShort(s.monthStart)} – ${fmtShort(s.monthEnd)}` : '';
+  const dontLabel = s.weekOnly
+    ? `dont S${weekOrMonth}`
+    : s.monthOnly ? `dont ${MONTHS_LONG_FR[weekOrMonth]||''}` : '';
+  const dontRides = s.weekOnly || s.monthOnly || [];
+  const dontDist  = dontRides.reduce((sum,a) => sum+(a.distance||0), 0) / 1000;
+  return `
+    <div class="ytd-accent-bar" style="background:${color}"></div>
+    <div class="ytd-year-label" style="color:${color}">${year}</div>
+    ${range?`<div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.55rem;letter-spacing:0.5px">${range}</div>`:''}
+    <div class="ytd-rows">
+      <div class="ytd-row"><span class="ytd-row-label">🚴 Sorties</span><span class="ytd-row-val">${s.rides||'—'}</span></div>
+      <div class="ytd-row"><span class="ytd-row-label">📏 Distance</span><span class="ytd-row-val">${s.rides?s.dist.toFixed(0)+' km':'—'}</span></div>
+      <div class="ytd-row"><span class="ytd-row-label">⏱️ Temps</span><span class="ytd-row-val">${s.rides?fmtTime(s.time):'—'}</span></div>
+      <div class="ytd-row"><span class="ytd-row-label">⛰️ Dénivelé</span><span class="ytd-row-val">${s.rides?Math.round(s.elev).toLocaleString()+' m':'—'}</span></div>
+      ${s.speed?`<div class="ytd-row"><span class="ytd-row-label">⚡ Vitesse moy.</span><span class="ytd-row-val">${s.speed.toFixed(1)} km/h</span></div>`:''}
+      ${dontRides.length?`<div class="ytd-row" style="margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border)"><span class="ytd-row-label" style="font-style:italic">${dontLabel}</span><span class="ytd-row-val" style="color:${color}">${dontRides.length} sortie${dontRides.length>1?'s':''} · ${dontDist.toFixed(0)} km</span></div>`:''}
+    </div>`;
 }
 
 function renderYTW() {
