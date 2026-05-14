@@ -1295,7 +1295,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 11/05/2026 09:30</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 14/05/2026 08:00</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1472,14 +1472,16 @@
       </div>
       <div class="ytd-inner-wrap">
         <div id="ytw-unified-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;align-items:stretch;width:100%">
-          <!-- cards injected by JS in ytw-grid-inner -->
-          <div id="ytw-grid" style="display:contents"></div>
-          <!-- rides columns -->
-          <div id="ytw-rides-col-a" style="display:none">
+          <div id="ytw-card-ecart" class="ytd-year-block ytd-diff-block" style="display:none"></div>
+          <div id="ytw-card-a" class="ytd-year-block" style="display:none"></div>
+          <div id="ytw-card-b" class="ytd-year-block" style="display:none"></div>
+          <div id="ytw-rides-col-a" class="ytd-year-block" style="display:none;border-color:var(--orange)">
+            <div class="ytd-accent-bar" style="background:var(--orange)"></div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.5rem" id="ytw-rides-label-a">—</div>
             <div class="activity-list" id="ytw-rides-a"></div>
           </div>
-          <div id="ytw-rides-col-b" style="display:none">
+          <div id="ytw-rides-col-b" class="ytd-year-block" style="display:none;border-color:var(--blue)">
+            <div class="ytd-accent-bar" style="background:var(--blue)"></div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytw-rides-label-b">—</div>
             <div class="activity-list" id="ytw-rides-b"></div>
           </div>
@@ -1502,12 +1504,16 @@
       </div>
       <div class="ytd-inner-wrap">
         <div id="ytm-unified-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;align-items:stretch;width:100%">
-          <div id="ytm-grid" style="display:contents"></div>
-          <div id="ytm-rides-col-a" style="display:none">
+          <div id="ytm-card-ecart" class="ytd-year-block ytd-diff-block" style="display:none"></div>
+          <div id="ytm-card-a" class="ytd-year-block" style="display:none"></div>
+          <div id="ytm-card-b" class="ytd-year-block" style="display:none"></div>
+          <div id="ytm-rides-col-a" class="ytd-year-block" style="display:none;border-color:var(--orange)">
+            <div class="ytd-accent-bar" style="background:var(--orange)"></div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--orange);margin-bottom:0.5rem" id="ytm-rides-label-a">—</div>
             <div class="activity-list" id="ytm-rides-a"></div>
           </div>
-          <div id="ytm-rides-col-b" style="display:none">
+          <div id="ytm-rides-col-b" class="ytd-year-block" style="display:none;border-color:var(--blue)">
+            <div class="ytd-accent-bar" style="background:var(--blue)"></div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:2px;color:var(--blue);margin-bottom:0.5rem" id="ytm-rides-label-b">—</div>
             <div class="activity-list" id="ytm-rides-b"></div>
           </div>
@@ -2865,9 +2871,23 @@ function renderYTW() {
       </div>`;
   };
 
-  const diffBlock = selectedYearA !== selectedYearB ? diffBlockHTML(sA, sB) : '';
-  document.getElementById('ytw-grid').innerHTML =
-    diffBlock + yearBlock(selectedYearA, sA) + yearBlock(selectedYearB, sB);
+  const diffHTML = selectedYearA !== selectedYearB ? diffBlockInnerHTML(sA, sB) : null;
+  const ecartCard = document.getElementById('ytw-card-ecart');
+  const cardA     = document.getElementById('ytw-card-a');
+  const cardB     = document.getElementById('ytw-card-b');
+
+  if (diffHTML) {
+    ecartCard.style.display = 'flex';
+    ecartCard.innerHTML = diffHTML;
+  } else { ecartCard.style.display = 'none'; }
+
+  cardA.style.display = 'flex';
+  cardA.style.borderColor = 'var(--orange)';
+  cardA.innerHTML = yearCardInner(selectedYearA, sA, 'var(--orange)', currentWk);
+
+  cardB.style.display = 'flex';
+  cardB.style.borderColor = 'var(--blue)';
+  cardB.innerHTML = yearCardInner(selectedYearB, sB, 'var(--blue)', currentWk);
 
   // Populate week rides lists
   const ridesA = sA.weekOnly.sort((a,b) => new Date(b.start_date)-new Date(a.start_date));
