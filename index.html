@@ -1315,7 +1315,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <header class="dash-header">
-    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 14/05/2026 09:30</span></div>
+    <div class="logo-text">STRAVA <span>DASH</span> <span class="version-badge">build 24/05/2026 09:00</span></div>
     <div class="header-athlete">
       <div class="athlete-avatar" id="athlete-avatar">🏃</div>
       <span class="athlete-name" id="athlete-name">Athlete</span>
@@ -1539,90 +1539,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Chart -->
-    <div class="card" style="margin-bottom:1.5rem">
-      <div class="card-head">
-        <span class="card-title" id="cy-chart-title">SEMAINE PAR SEMAINE</span>
-        <div class="metric-tabs">
-          <button class="metric-tab active" onclick="setCyclingMetric('distance',this)">Distance</button>
-          <button class="metric-tab" onclick="setCyclingMetric('time',this)">Temps</button>
-          <button class="metric-tab" onclick="setCyclingMetric('elevation',this)">Dénivelé</button>
-          <button class="metric-tab" onclick="setCyclingMetric('rides',this)">Sorties</button>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="compare-chart-wrap"><canvas id="cyclingCompareChart"></canvas></div>
-        <p style="font-size:0.7rem;color:var(--muted);margin-top:0.75rem;text-align:center">
-          Cliquez sur une barre pour voir les sorties correspondantes
-        </p>
-      </div>
-    </div>
-
-    <!-- Drill-down panel -->
-    <div id="drill-panel" style="display:none;margin-bottom:1.5rem">
-      <div class="card">
-        <div class="card-head" style="justify-content:space-between">
-          <span class="card-title" id="drill-title">SORTIES</span>
-          <div style="display:flex;align-items:center;gap:0.75rem">
-            <span class="card-badge" id="drill-badge">—</span>
-            <button onclick="closeDrill()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.75rem;font-family:'DM Sans',sans-serif">✕ Fermer</button>
-          </div>
-        </div>
-        <div class="activity-list" id="drill-list"></div>
-      </div>
-    </div>
-
-    <!-- Cumulative km chart -->
-    <div class="card" style="margin-bottom:1.5rem">
-      <div class="card-head">
-        <span class="card-title">📈 CUMUL KM — JOUR PAR JOUR</span>
-        <span class="card-badge" id="cumul-badge">DEPUIS LE 1er JANVIER</span>
-      </div>
-      <div class="card-body">
-        <div style="position:relative;height:520px"><canvas id="cumulChart"></canvas></div>
-        <p style="font-size:0.7rem;color:var(--muted);margin-top:0.6rem;text-align:center">Distance cumulée depuis le 1er janvier · chaque point = une journée · les mois futurs sont vides</p>
-      </div>
-    </div>
-
-    <!-- Detail table -->
-    <div class="card" style="margin-bottom:1.5rem">
-      <div class="card-head">
-        <span class="card-title" id="cy-table-title">TABLEAU PAR SEMAINE</span>
-        <span class="card-badge" id="cy-table-badge">—</span>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="rides-table">
-          <thead><tr>
-            <th id="th-period">Sem.</th>
-            <th>Dates</th>
-            <th id="th-a-km" style="color:var(--orange)">A — km</th>
-            <th id="th-b-km" style="color:var(--blue)">B — km</th>
-            <th>Écart</th>
-            <th id="th-a-rides" style="color:var(--orange)">A — sorties</th>
-            <th id="th-b-rides" style="color:var(--blue)">B — sorties</th>
-            <th>Visuel</th>
-          </tr></thead>
-          <tbody id="cycling-table-body"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Ride lists -->
-    <div class="card" style="margin-bottom:1.5rem">
-      <div class="card-head">
-        <span class="card-title" id="cy-list-a-title">SORTIES — A</span>
-        <span class="card-badge" id="cy-a-badge">—</span>
-      </div>
-      <div class="activity-list" id="cycling-a-list"></div>
-    </div>
-    <div class="card" style="margin-bottom:2rem">
-      <div class="card-head">
-        <span class="card-title" id="cy-list-b-title">SORTIES — B</span>
-        <span class="card-badge" id="cy-b-badge">—</span>
-      </div>
-      <div class="activity-list" id="cycling-b-list"></div>
     </div>
 
   </main>
